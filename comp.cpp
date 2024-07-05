@@ -15,6 +15,74 @@ void display_image(cv::Mat& image, std::string name) {
 }
 
 /**
+ * Compute and return indices of 8x8 zig zag traversal
+ */
+std::vector<std::pair<int,int>> zig_zag_indices() {
+    std::vector<std::pair<int, int>> indices;
+    indices.push_back(std::make_pair(0, 0));
+
+    int cnt = 1;
+    int r = 0, c = 0;
+    int up = 1;
+    while (cnt < 64) {
+        // top side
+        if (r == 0) {
+            if (up) {
+                c += 1; // across 1
+                up = 0;
+            } else {
+                c -= 1; r += 1; // down-left 1
+            }
+        }
+
+        // bottom side
+        else if (r == 7) {
+            if (up) {
+                c += 1; r -= 1; // up-right 1
+            } else {
+                c += 1; // across 1
+                up = 1;
+            }
+        }
+
+        // left side
+        else if (c == 0) {
+            if (up) {
+                c += 1; r -= 1; // up-right 1
+            } else {
+                r += 1; // down 1
+                up = 1;
+            }
+        }
+
+        // right side
+        else if (c == 7) {
+            if (up) {
+                r += 1; // down 1
+                up = 0;
+            } else {
+                c -= 1; r += 1; // down-left 1
+            }
+            
+        }
+
+        // other
+        else {
+            if (up) {
+                c += 1; r -= 1; // up-right 1
+            } else {
+                c -= 1; r += 1; // down-left 1
+            }
+        }
+
+        indices.push_back(std::make_pair(r, c));
+        cnt++;
+    }
+
+    return indices;
+}
+
+/**
  * Run-length-encoding of given block array
  */
 std::vector<uchar> rle(std::vector<uchar> block_array) {
@@ -59,15 +127,21 @@ int muckin() {
     cv::Mat flattenedBlock = block.reshape(0, 1).clone();
     uchar* data = flattenedBlock.ptr();
     std::vector<uchar> flattenedVec(data, data + flattenedBlock.cols);
-    for (uchar el : flattenedVec) {
-        std::cout << static_cast<int>(el) << std::endl;
-    }
-    std::cout << "-------------" << std::endl;
+    // for (uchar el : flattenedVec) {
+    //     std::cout << static_cast<int>(el) << std::endl;
+    // }
+    // std::cout << "-------------" << std::endl;
 
     // rle encode vector
     std::vector<uchar> rleVec = rle(flattenedVec);
-    for (uchar el : rleVec) {
-        std::cout << static_cast<int>(el) << std::endl;
+    // for (uchar el : rleVec) {
+    //     std::cout << static_cast<int>(el) << std::endl;
+    // }
+
+    // print zig zag indices
+    std::vector<std::pair<int, int>> inds = zig_zag_indices();
+    for (std::pair<int, int> rc : inds) {
+        std::cout << rc.first << ", " << rc.second << std::endl;
     }
 
     return 0;
