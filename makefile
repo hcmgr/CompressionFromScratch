@@ -5,4 +5,4 @@ comp: comp.cpp
 	$(CC) $(CFLAGS) -o comp comp.cpp $(OPENCV_FLAGS)
 
 clean:
-	rm -f comp
+	rm -f comp *.out
