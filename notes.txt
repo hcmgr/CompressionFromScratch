@@ -1,10 +1,12 @@
 Steps:
     - (optional) separate into Y, Cb, Cr matrices
     - for each 8x8 block:
-        - DCT
-        - quantisation
-        - RLE
-        - huffman on RLE
+        - DCT                   => 8x8 block
+        - quantisation          => 8x8 block
+        - zig-zag               => 64-d vector
+        - RLE                   => l-d vector, l <= 64
+        - huffman on RLE        => m-d vector, m <= l
+
     - NOTE: at this point, each 8x8 block has been converted to array of bytes
             of indeterminate length
     - concatenate the blocks, separating each by an EOB char

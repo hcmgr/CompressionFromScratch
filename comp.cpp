@@ -14,45 +14,17 @@ void display_image(cv::Mat& image, std::string name) {
     cv::waitKey(0);
 }
 
-int muckin() {
-    int width = 640;
-    int height = 480;
-
-    // Create a grayscale image (1 channel)
-    cv::Mat image(height, width, CV_8UC1);
-
-    // Generate black to white gradient
-    for (int y = 0; y < image.rows; ++y) {
-        for (int x = 0; x < image.cols; ++x) {
-            // Calculate intensity based on position
-            uchar intensity = static_cast<uchar>((x + y) * 255 / (image.cols + image.rows));
-            image.at<uchar>(y, x) = intensity;
-        }
-    }
-
-    display_image(image, "Gradient");
+/**
+ * Run-length-encoding of given block array
+ */
+int rle(std::vector<uchar>) {
     return 0;
 }
 
-int main() {
+int muckin() {
     // Load the image
     std::string image_name = "test_images/test_1.png";
     cv::Mat image = cv::imread(image_name, cv::IMREAD_COLOR);
-
-    std::vector<uchar> vec;
-    cv::Vec3b pixel;
-    pixel = image.at<cv::Vec3b>(349, 20);
-    std::cout << pixel << std::endl;
-    int r = image.rows - 1;
-    int n = image.cols;
-    for (int c = 0; c < n; c++) {
-        pixel = image.at<cv::Vec3b>(r, c);
-        vec.push_back(pixel[1]);
-    }
-
-    for (uchar el : vec) {
-        std::cout << static_cast<int>(el) << std::endl;
-    }
 
     // Check if the image was loaded successfully
     if (image.empty()) {
@@ -60,8 +32,31 @@ int main() {
         return -1;
     }
 
+    // split into channels
+    std::vector<cv::Mat> channels;
+    split(image, channels);
+    cv::Mat blue_channel = channels[1];
+
+    // extracting 8x8 block
+    cv::Rect roi_rect(0, 0, 8, 8);
+    cv::Mat block = blue_channel(roi_rect).clone();
+    std::cout << block << std::endl;
+
+    // flatten and convert to vector<uchar>
+    cv::Mat flattenedBlock = block.reshape(0, 1).clone();
+    uchar* data = flattenedBlock.ptr();
+    std::vector<uchar> flattenedVec(data, data + flattenedBlock.cols);
+    for (uchar el : flattenedVec) {
+        std::cout << static_cast<int>(el) << std::endl;
+    }
+    std::cout << flattenedVec.size() << std::endl;
+
     display_image(image, image_name);
-    // muckin();
+    return 0;
+}
+
+int main() {
+    muckin();
     return 0;
 }
 
