@@ -1,6 +1,7 @@
 #include <opencv2/opencv.hpp>
 #include <iostream>
 #include <typeinfo>
+#include <cmath>
 
 void print_image_stats(cv::Mat& image) {
     std::cout << "NROWS: " << image.rows << std::endl;
@@ -15,21 +16,99 @@ void display_image(cv::Mat& image, std::string name) {
 }
 
 #define BLOCK_SIZE 8
+
+// /**
+//  * A JPEG quantisation matrix - can be freely replaced with others
+//  */
+// float QUANTISATION_MATRIX[BLOCK_SIZE][BLOCK_SIZE] = {
+//     {16, 11, 10, 16, 24, 40, 51, 61},
+//     {12, 12, 14, 19, 26, 58, 60, 55},
+//     {14, 13, 16, 24, 40, 57, 69, 56},
+//     {14, 17, 22, 29, 51, 87, 80, 62},
+//     {18, 22, 37, 56, 68, 109, 103, 77},
+//     {24, 35, 55, 64, 81, 104, 113, 92},
+//     {49, 64, 78, 87, 103, 121, 120, 101},
+//     {72, 92, 95, 98, 112, 100, 103, 99}
+// };
+
+/**
+ * A JPEG quantisation matrix - can be freely replaced with others
+ */
 float QUANTISATION_MATRIX[BLOCK_SIZE][BLOCK_SIZE] = {
-    {16, 11, 10, 16, 24, 40, 51, 61},
-    {12, 12, 14, 19, 26, 58, 60, 55},
-    {14, 13, 16, 24, 40, 57, 69, 56},
-    {14, 17, 22, 29, 51, 87, 80, 62},
-    {18, 22, 37, 56, 68, 109, 103, 77},
-    {24, 35, 55, 64, 81, 104, 113, 92},
-    {49, 64, 78, 87, 103, 121, 120, 101},
-    {72, 92, 95, 98, 112, 100, 103, 99}
+    {8,  6,  5,  8,  10, 14, 19, 24},
+    {6,  6,  7,  10, 13, 22, 24, 20},
+    {7,  7,  8,  14, 19, 21, 26, 22},
+    {7,  9,  11, 15, 23, 35, 32, 25},
+    {9,  11, 18, 22, 29, 41, 40, 28},
+    {12, 16, 24, 26, 33, 39, 43, 32},
+    {21, 26, 32, 35, 40, 48, 47, 38},
+    {28, 32, 36, 38, 42, 38, 40, 37}
 };
+
+/**
+ * Pre-computed cosines for DCT
+ */
+float DCT_COSINES[BLOCK_SIZE][BLOCK_SIZE];
+
+/**
+ * Pre-computed coefficients for DCT
+ */
+float DCT_COEFS[BLOCK_SIZE][BLOCK_SIZE];
+
+/**
+ * Populate pre-computed DCT cosines matrix
+ */
+void populate_dct_cosines_matrix(float cosines[BLOCK_SIZE][BLOCK_SIZE]) {
+    double temp;
+    for (int i = 0; i < BLOCK_SIZE; i++) {
+        for (int j = 0; j < BLOCK_SIZE; j++) {
+            temp = (2*i+1)*j*M_PI / 2 / BLOCK_SIZE;
+            cosines[i][j] = cos(temp);
+            // std::cout << i << ", " << j << ": " << temp << " " << cos(temp) << std::endl;
+        }
+    }
+}
+
+/**
+ * Populate pre-computed DCT coefficients matrix
+ */
+void populate_dct_coefs_matrix(float coefs[BLOCK_SIZE][BLOCK_SIZE]) {
+    float temp;
+    for (int i = 0; i < BLOCK_SIZE; i++) {
+        for (int j = 0; j < BLOCK_SIZE; j++) {
+            temp = 1 / sqrt(2 * BLOCK_SIZE);
+            if (i == 0) {
+                temp *= (1 / sqrt(2));
+            }
+            if (j == 0) {
+                temp *= (1 / sqrt(2));
+            }
+            coefs[i][j] = temp;
+            // std::cout << i << ", " << j << ": " << temp << std::endl;
+        }
+    }
+}
 
 /**
  * Performs DCT step on the given 8x8 block
  */
-cv::Mat dct_block(cv::Mat block);
+void dct_block(cv::Mat block) {
+    float temp;
+    int N = block.rows;
+    int r,c,i,j;
+    for (r = 0; r < N; r++) {
+        for (c = 0; c < N; c++) {
+            temp = 0.0;
+            for (i = 0; i < N; i++) {
+                for (j = 0; j < N; j++) {
+                    temp += (DCT_COSINES[r][i] * DCT_COSINES[c][j] * block.at<float>(i, j));
+                }
+            }
+            temp *= DCT_COEFS[r][c];
+            block.at<float>(r, c) = round(temp);
+        }
+    }
+}
 
 /**
  * Performs quantisation step on the given 8x8 block
@@ -160,26 +239,35 @@ cv::Mat loadImageFromDiv2k(int number) {
 }
 
 int muckin() {
-    int num = 701;
+    int num = 690;
     cv::Mat image = loadImageFromDiv2k(num);
     // display_image(image, std::to_string(num));
 
     // split into channels
     std::vector<cv::Mat> channels;
     split(image, channels);
-    cv::Mat blue_channel = channels[0];
+    cv::Mat blue_channel = channels[2];
+
+    // use Y, Cb and Cr instead
 
     // extracting 8x8 block
-    cv::Rect roi_rect(image.rows/4, image.cols/4, 8, 8);
+    cv::Rect roi_rect(image.rows/2, image.cols/2, 8, 8);
     cv::Mat block = blue_channel(roi_rect).clone();
     std::cout << block << std::endl;
 
     // float format needed for high precision in dft and quantisation steps
     cv::Mat float_block;
     block.convertTo(float_block, CV_32F);
+    std::cout << float_block << std::endl;
     
     // subtract 128 
     cv::subtract(float_block, cv::Scalar(128), float_block);
+    std::cout << float_block << std::endl;
+
+    // DCT
+    populate_dct_cosines_matrix(DCT_COSINES);
+    populate_dct_coefs_matrix(DCT_COEFS);
+    dct_block(float_block);
     std::cout << float_block << std::endl;
 
     // quantise block
@@ -204,6 +292,10 @@ int muckin() {
     //     std::cout << rc.first << ", " << rc.second << std::endl;
     // }
 
+    return 0;
+}
+
+int jpeg() {
     return 0;
 }
 
