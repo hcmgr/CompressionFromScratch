@@ -31,18 +31,32 @@ void display_image(cv::Mat& image, std::string name) {
 //     {72, 92, 95, 98, 112, 100, 103, 99}
 // };
 
+// /**
+//  * A JPEG quantisation matrix - can be freely replaced with others
+//  */
+// float QUANTISATION_MATRIX[BLOCK_SIZE][BLOCK_SIZE] = {
+//     {8,  6,  5,  8,  10, 14, 19, 24},
+//     {6,  6,  7,  10, 13, 22, 24, 20},
+//     {7,  7,  8,  14, 19, 21, 26, 22},
+//     {7,  9,  11, 15, 23, 35, 32, 25},
+//     {9,  11, 18, 22, 29, 41, 40, 28},
+//     {12, 16, 24, 26, 33, 39, 43, 32},
+//     {21, 26, 32, 35, 40, 48, 47, 38},
+//     {28, 32, 36, 38, 42, 38, 40, 37}
+// };
+
 /**
  * A JPEG quantisation matrix - can be freely replaced with others
  */
 float QUANTISATION_MATRIX[BLOCK_SIZE][BLOCK_SIZE] = {
-    {8,  6,  5,  8,  10, 14, 19, 24},
-    {6,  6,  7,  10, 13, 22, 24, 20},
-    {7,  7,  8,  14, 19, 21, 26, 22},
-    {7,  9,  11, 15, 23, 35, 32, 25},
-    {9,  11, 18, 22, 29, 41, 40, 28},
-    {12, 16, 24, 26, 33, 39, 43, 32},
-    {21, 26, 32, 35, 40, 48, 47, 38},
-    {28, 32, 36, 38, 42, 38, 40, 37}
+    {1,  1,  2,  4,  8,  16, 32, 64},
+    {1,  1,  2,  4,  8,  16, 32, 64},
+    {2,  2,  2,  4,  8,  16, 32, 64},
+    {4,  4,  4,  4,  8,  16, 32, 64},
+    {8,  8,  8,  8,  8,  16, 32, 64},
+    {16, 16, 16, 16, 16, 16, 32, 64},
+    {32, 32, 32, 32, 32, 32, 32, 64},
+    {64, 64, 64, 64, 64, 64, 64, 64}
 };
 
 /**
@@ -64,7 +78,6 @@ void populate_dct_cosines_matrix(float cosines[BLOCK_SIZE][BLOCK_SIZE]) {
         for (int j = 0; j < BLOCK_SIZE; j++) {
             temp = (2*i+1)*j*M_PI / 2 / BLOCK_SIZE;
             cosines[i][j] = cos(temp);
-            // std::cout << i << ", " << j << ": " << temp << " " << cos(temp) << std::endl;
         }
     }
 }
@@ -84,9 +97,30 @@ void populate_dct_coefs_matrix(float coefs[BLOCK_SIZE][BLOCK_SIZE]) {
                 temp *= (1 / sqrt(2));
             }
             coefs[i][j] = temp;
-            // std::cout << i << ", " << j << ": " << temp << std::endl;
         }
     }
+}
+
+/**
+ * Convert image from [B,G,R] to [Y,Cb,Cr] format
+ */
+cv::Mat bgr_to_ycbcr(cv::Mat bgr_image) {
+    cv::Mat ycbcr_image(bgr_image.rows, bgr_image.cols, CV_8UC3, cv::Scalar(0, 0, 0));
+    float b, g, r;
+    for (int i = 0; i < bgr_image.rows; i++) {
+        for (int j = 0; j < bgr_image.cols; j++) {
+            cv::Vec3b &bgr_pixels = bgr_image.at<cv::Vec3b>(i, j);
+            b = bgr_pixels[0]; 
+            g = bgr_pixels[1]; 
+            r = bgr_pixels[2];
+
+            cv::Vec3b &ycbcr_pixels = ycbcr_image.at<cv::Vec3b>(i, j);
+            ycbcr_pixels[0] = 0.299*r + 0.587*g + 0.114*b; // Y
+            ycbcr_pixels[1] = 0.564*(b - ycbcr_pixels[0]); // Cb
+            ycbcr_pixels[2] = 0.713*(r - ycbcr_pixels[0]); // Cr
+        }
+    }
+    return ycbcr_image;
 }
 
 /**
@@ -239,52 +273,58 @@ cv::Mat loadImageFromDiv2k(int number) {
 }
 
 int muckin() {
-    int num = 690;
+    int num = 28;
     cv::Mat image = loadImageFromDiv2k(num);
-    // display_image(image, std::to_string(num));
+    display_image(image, std::to_string(num));
 
     // split into channels
-    std::vector<cv::Mat> channels;
-    split(image, channels);
-    cv::Mat blue_channel = channels[2];
-
-    // use Y, Cb and Cr instead
+    // std::vector<cv::Mat> channels;
+    // split(image, channels);
+    // cv::Mat blue_channel = channels[2];
 
     // extracting 8x8 block
-    cv::Rect roi_rect(image.rows/2, image.cols/2, 8, 8);
-    cv::Mat block = blue_channel(roi_rect).clone();
-    std::cout << block << std::endl;
+    // cv::Rect bgr_roi_rect(image.rows/2, image.cols/2, 8, 8);
+    // cv::Mat bgr_block = blue_channel(bgr_roi_rect).clone();
+    // std::cout << bgr_block << std::endl;
 
-    // float format needed for high precision in dft and quantisation steps
-    cv::Mat float_block;
-    block.convertTo(float_block, CV_32F);
-    std::cout << float_block << std::endl;
+    // use Y, Cb and Cr instead
+    cv::Mat ycbcr_image = bgr_to_ycbcr(image);
+    display_image(ycbcr_image, std::to_string(num));
+    // cv::Rect ycbcr_roi_rect(image.rows/2, image.cols/2, 8, 8);
+    // cv::Mat ycbcr_block = blue_channel(ycbcr_roi_rect).clone();
+    // std::cout << ycbcr_block << std::endl;
+
+    // // float format needed for high precision in dft and quantisation steps
+    // cv::Mat float_block;
+    // block.convertTo(float_block, CV_32F);
+    // std::cout << float_block << std::endl;
     
-    // subtract 128 
-    cv::subtract(float_block, cv::Scalar(128), float_block);
-    std::cout << float_block << std::endl;
+    // // subtract 128 
+    // cv::subtract(float_block, cv::Scalar(128), float_block);
+    // std::cout << float_block << std::endl;
 
-    // DCT
-    populate_dct_cosines_matrix(DCT_COSINES);
-    populate_dct_coefs_matrix(DCT_COEFS);
-    dct_block(float_block);
-    std::cout << float_block << std::endl;
+    // // DCT
+    // populate_dct_cosines_matrix(DCT_COSINES);
+    // populate_dct_coefs_matrix(DCT_COEFS);
+    // dct_block(float_block);
+    // std::cout << float_block << std::endl;
 
-    // quantise block
-    cv::Mat quantisation_matrix(BLOCK_SIZE, BLOCK_SIZE, CV_32F, QUANTISATION_MATRIX);
-    cv::Mat quantised_block = quantise_block(float_block, quantisation_matrix);
-    std::cout << quantised_block << std::endl;
+    // // quantise block
+    // cv::Mat quantisation_matrix(BLOCK_SIZE, BLOCK_SIZE, CV_32F, QUANTISATION_MATRIX);
+    // cv::Mat quantised_block = quantise_block(float_block, quantisation_matrix);
+    // std::cout << quantised_block << std::endl;
 
-    // flatten and convert to vector<uchar>
-    // cv::Mat flattenedBlock = block.reshape(0, 1).clone();
+    // // flatten and convert to vector<uchar>
+    // cv::Mat flattenedBlock = quantised_block.reshape(0, 1).clone();
     // uchar* data = flattenedBlock.ptr();
     // std::vector<uchar> flattenedVec(data, data + flattenedBlock.cols);
 
-    // rle encode vector
+    // // rle encode vector
     // std::vector<uchar> rleVec = rle(flattenedVec);
     // for (uchar el : rleVec) {
     //     std::cout << static_cast<int>(el) << std::endl;
     // }
+    // std::cout << std::endl << rleVec.size() << std::endl;
 
     // print zig zag indices
     // std::vector<std::pair<int, int>> inds = zig_zag_indices();
