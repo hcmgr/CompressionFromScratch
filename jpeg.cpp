@@ -46,67 +46,11 @@ void display_image(cv::Mat& image, std::string name) {
 // };
 
 /**
- * A JPEG quantisation matrix - can be freely replaced with others
- */
-float QUANTISATION_MATRIX[BLOCK_SIZE][BLOCK_SIZE] = {
-    {1,  1,  2,  4,  8,  16, 32, 64},
-    {1,  1,  2,  4,  8,  16, 32, 64},
-    {2,  2,  2,  4,  8,  16, 32, 64},
-    {4,  4,  4,  4,  8,  16, 32, 64},
-    {8,  8,  8,  8,  8,  16, 32, 64},
-    {16, 16, 16, 16, 16, 16, 32, 64},
-    {32, 32, 32, 32, 32, 32, 32, 64},
-    {64, 64, 64, 64, 64, 64, 64, 64}
-};
-
-/**
- * Pre-computed cosines for DCT
- */
-float DCT_COSINES[BLOCK_SIZE][BLOCK_SIZE];
-
-/**
- * Pre-computed coefficients for DCT
- */
-float DCT_COEFS[BLOCK_SIZE][BLOCK_SIZE];
-
-/**
- * Populate pre-computed DCT cosines matrix
- */
-void populate_dct_cosines_matrix(float cosines[BLOCK_SIZE][BLOCK_SIZE]) {
-    double temp;
-    for (int i = 0; i < BLOCK_SIZE; i++) {
-        for (int j = 0; j < BLOCK_SIZE; j++) {
-            temp = (2*i+1)*j*M_PI / 2 / BLOCK_SIZE;
-            cosines[i][j] = cos(temp);
-        }
-    }
-}
-
-/**
- * Populate pre-computed DCT coefficients matrix
- */
-void populate_dct_coefs_matrix(float coefs[BLOCK_SIZE][BLOCK_SIZE]) {
-    float temp;
-    for (int i = 0; i < BLOCK_SIZE; i++) {
-        for (int j = 0; j < BLOCK_SIZE; j++) {
-            temp = 1 / sqrt(2 * BLOCK_SIZE);
-            if (i == 0) {
-                temp *= (1 / sqrt(2));
-            }
-            if (j == 0) {
-                temp *= (1 / sqrt(2));
-            }
-            coefs[i][j] = temp;
-        }
-    }
-}
-
-/**
  * Convert image from [B,G,R] to [Y,Cb,Cr] format
  */
 cv::Mat bgr_to_ycbcr(cv::Mat bgr_image) {
     cv::Mat ycbcr_image(bgr_image.rows, bgr_image.cols, CV_8UC3, cv::Scalar(0, 0, 0));
-    float b, g, r;
+    float b, g, r, y, cb, cr;
     for (int i = 0; i < bgr_image.rows; i++) {
         for (int j = 0; j < bgr_image.cols; j++) {
             cv::Vec3b &bgr_pixels = bgr_image.at<cv::Vec3b>(i, j);
@@ -114,10 +58,14 @@ cv::Mat bgr_to_ycbcr(cv::Mat bgr_image) {
             g = bgr_pixels[1]; 
             r = bgr_pixels[2];
 
+            y = 0.299 * r + 0.587 * g + 0.114 * b;
+            cb = 0.564 * (b - y);
+            cr = 0.713 * (r - y);
+
             cv::Vec3b &ycbcr_pixels = ycbcr_image.at<cv::Vec3b>(i, j);
-            ycbcr_pixels[0] = 0.299*r + 0.587*g + 0.114*b; // Y
-            ycbcr_pixels[1] = 0.564*(b - ycbcr_pixels[0]); // Cb
-            ycbcr_pixels[2] = 0.713*(r - ycbcr_pixels[0]); // Cr
+            ycbcr_pixels[0] = cv::saturate_cast<uchar>(round(y));
+            ycbcr_pixels[1] = cv::saturate_cast<uchar>(round(cb));
+            ycbcr_pixels[2] = cv::saturate_cast<uchar>(round(cr));
         }
     }
     return ycbcr_image;
@@ -147,7 +95,7 @@ void dct_block(cv::Mat block) {
 /**
  * Performs quantisation step on the given 8x8 block
  */
-cv::Mat quantise_block(cv::Mat block, cv::Mat quantisationMatrix) {
+void quantise_block(cv::Mat block, cv::Mat quantisationMatrix) {
     if (block.rows != quantisationMatrix.rows || block.cols != quantisationMatrix.cols) {
         std::cout << "Fatal: incorrect block size" << std::endl;
     }
@@ -158,80 +106,6 @@ cv::Mat quantise_block(cv::Mat block, cv::Mat quantisationMatrix) {
             block.at<float>(r, c) = round(currIntensity / quantisationMatrix.at<float>(r, c));
         }
     }
-
-    return block;
-}
-
-/**
- * Compute and return indices of 8x8 zig zag traversal
- * 
- * NOTE: think this works in general, have hardcoded for now
- */
-std::vector<std::pair<int,int>> zig_zag_indices() {
-    std::vector<std::pair<int, int>> indices;
-    indices.push_back(std::make_pair(0, 0));
-
-    int m = 8, n = 8;
-    int r = 0, c = 0;
-    int cnt = 1;
-    int up = 1; // 1 if moving up-right, 0 if moving down-left
-
-    while (cnt < m*n) {
-        // top side
-        if (r == 0) {
-            if (up) {
-                c += 1; // across 1
-                up = 0;
-            } else {
-                c -= 1; r += 1; // down-left 1
-            }
-        }
-
-        // bottom side
-        else if (r == 7) {
-            if (up) {
-                c += 1; r -= 1; // up-right 1
-            } else {
-                c += 1; // across 1
-                up = 1;
-            }
-        }
-
-        // left side
-        else if (c == 0) {
-            if (up) {
-                c += 1; r -= 1; // up-right 1
-            } else {
-                r += 1; // down 1
-                up = 1;
-            }
-        }
-
-        // right side
-        else if (c == 7) {
-            if (up) {
-                r += 1; // down 1
-                up = 0;
-            } else {
-                c -= 1; r += 1; // down-left 1
-            }
-            
-        }
-
-        // other
-        else {
-            if (up) {
-                c += 1; r -= 1; // up-right 1
-            } else {
-                c -= 1; r += 1; // down-left 1
-            }
-        }
-
-        indices.push_back(std::make_pair(r, c));
-        cnt++;
-    }
-
-    return indices;
 }
 
 /**
@@ -275,24 +149,31 @@ cv::Mat loadImageFromDiv2k(int number) {
 int muckin() {
     int num = 28;
     cv::Mat image = loadImageFromDiv2k(num);
-    display_image(image, std::to_string(num));
+    // display_image(image, std::to_string(num));
 
     // split into channels
-    // std::vector<cv::Mat> channels;
-    // split(image, channels);
-    // cv::Mat blue_channel = channels[2];
+    std::vector<cv::Mat> channels;
+    split(image, channels);
+    cv::Mat blue_channel = channels[2];
 
     // extracting 8x8 block
-    // cv::Rect bgr_roi_rect(image.rows/2, image.cols/2, 8, 8);
-    // cv::Mat bgr_block = blue_channel(bgr_roi_rect).clone();
-    // std::cout << bgr_block << std::endl;
+    cv::Rect bgr_roi_rect(image.rows/2, image.cols/2, 8, 8);
+    cv::Mat bgr_block = blue_channel(bgr_roi_rect).clone();
+    std::cout << bgr_block << std::endl;
 
     // use Y, Cb and Cr instead
     cv::Mat ycbcr_image = bgr_to_ycbcr(image);
-    display_image(ycbcr_image, std::to_string(num));
-    // cv::Rect ycbcr_roi_rect(image.rows/2, image.cols/2, 8, 8);
-    // cv::Mat ycbcr_block = blue_channel(ycbcr_roi_rect).clone();
-    // std::cout << ycbcr_block << std::endl;
+    // display_image(ycbcr_image, std::to_string(num));
+
+    // split into channels
+    std::vector<cv::Mat> ycbcr_channels;
+    split(ycbcr_image, ycbcr_channels);
+    cv::Mat ycbcr_channel = ycbcr_channels[1];
+
+    // extracting 8x8 block
+    cv::Rect ycbcr_roi_rect(ycbcr_image.rows/2, ycbcr_image.cols/2, 8, 8);
+    cv::Mat ycbcr_block = ycbcr_channel(ycbcr_roi_rect).clone();
+    std::cout << ycbcr_block << std::endl;
 
     // // float format needed for high precision in dft and quantisation steps
     // cv::Mat float_block;
@@ -335,13 +216,57 @@ int muckin() {
     return 0;
 }
 
+/**
+ * Apply jpeg steps for given block:
+ *  - normalise
+ *  - DCT
+ *  - quantise
+ *  - zig-zag
+ *  - entropy encode
+ */
+int jpeg_block(cv::Mat block) {
+    // normalise each pixel to range [-128, 127] range
+    cv::subtract(block, cv::Scalar(128), block);
+
+    // dct
+    dct_block(block);
+
+    // quantise block
+    cv::Mat quantisation_matrix(BLOCK_SIZE, BLOCK_SIZE, CV_32F, QUANTISATION_MATRIX);
+    quantise_block(block, quantisation_matrix);
+
+    // flattened, zig-zag ordered
+
+    // entropy encode
+    return 0;
+}
+
 int jpeg() {
+    // load image
+    int num = 28;
+    cv::Mat image = loadImageFromDiv2k(num);
+
+    // convert to Y, Cr, Cb format
+    image = bgr_to_ycbcr(image);
+
+    // split into channels
+    std::vector<cv::Mat> channels;
+    split(image, channels);
+    cv::Mat curr_channel = channels[0]; // Y
+    
+    // extract block and apply jpeg on it
+    int r = image.rows / 2, c = image.cols / 2;
+    cv::Rect block_rect(r, c, 8, 8);
+    cv::Mat block = curr_channel(block_rect).clone();
+    std::cout << block << std::endl;
+    jpeg_block(block);
+
+    // TODO: concat block arrays to produce channel encodings
+    // TODO: concat channel encodings to produce final data
     return 0;
 }
 
 int main() {
-    muckin();
+    jpeg();
     return 0;
 }
-
-
