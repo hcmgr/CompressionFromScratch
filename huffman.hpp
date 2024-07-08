@@ -7,25 +7,48 @@
  */
 class HuffmanNode {
 public:
-    uchar val;
+    int val;
     int freq;
     HuffmanNode *left;
     HuffmanNode *right;
 
     // leaf constructor
-    HuffmanNode(uchar val, int freq);
+    HuffmanNode(int val, int freq);
 
     // non-leaf constructor
     HuffmanNode(HuffmanNode *left, HuffmanNode *right);
-
-    /**
-     * 
-     */
 };
 
 /**
- * Build up and return huffman encoding tree of given array
+ * Class to perform huffman coding on a given byte array.
  */
-HuffmanNode* build_huffman_tree(std::vector<uchar> arr);
+class Huffman {
+private:
+    /* Huffman encoding tree */
+    HuffmanNode *root; 
+
+    /* Encodings map (i.e. mapping of the form: byte -> binary string) */
+    std::map<int, std::string> encodings;
+
+    /**
+     * Builds the huffman encoding tree
+     */
+    void build_huffman_tree(std::vector<int> data);
+
+    /**
+     * Traverses the huffman encoding tree to populate the encodings map
+     */
+    void build_encodings_map(HuffmanNode *root, std::string code);
+
+public:
+    Huffman();
+    
+    /**
+     * Huffman encodes the given byte array
+     */
+    std::vector<uchar> encode_data(std::vector<int> data);
+
+    std::map<int, std::string> get_encodings();
+};
 
 void test_huffman_tree_build();

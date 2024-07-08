@@ -3,7 +3,7 @@
 #include <opencv2/opencv.hpp>
 #include "huffman.hpp"
 
-HuffmanNode::HuffmanNode(uchar val, int freq) { // leaf
+HuffmanNode::HuffmanNode(int val, int freq) { // leaf
     this->val = val;
     this->freq = freq;
 }
@@ -22,15 +22,15 @@ HuffmanNode::HuffmanNode(HuffmanNode *left, HuffmanNode *right) { // non-leaf
 }
 
 /**
- * Perform huffman encoding on the given rle-encoded array
+ * Builds the huffman encoding tree
  */
-HuffmanNode* build_huffman_tree(std::vector<uchar> arr) {
+void Huffman::build_huffman_tree(std::vector<int> data) {
     // build up frequency map
-    std::map<uchar, int> freqCount;
-    int n = arr.size();
+    std::map<int, int> freqCount;
+    int n = data.size();
     int f, el;
     for (int i = 0; i < n; i+=2) {
-        f = arr[i], el = arr[i+1];
+        f = data[i], el = data[i+1];
         freqCount[el] += f;
     }
 
@@ -53,30 +53,66 @@ HuffmanNode* build_huffman_tree(std::vector<uchar> arr) {
         HuffmanNode *node = new HuffmanNode(left, right);
         pq.push(std::make_pair(node->freq, node));
     }
-    HuffmanNode *root = pq.top().second;
-    return root;
+    this->root = pq.top().second;
 }
 
-void encode_leaves(HuffmanNode *root, std::string code, std::map<uchar, std::string> &encodings) {
+/**
+ * Traverses huffman tree to find encodings for each leaf
+ */
+void Huffman::build_encodings_map(HuffmanNode *root, std::string code) {
     if (!root) {
         return;
     }
 
     if (!root->left && !root->right) {
-        encodings[root->val] = code;
+        this->encodings[root->val] = code;
     }
 
-    encode_leaves(root->left, code + "0", encodings);
-    encode_leaves(root->right, code + "1", encodings);
+    build_encodings_map(root->left, code + "0");
+    build_encodings_map(root->right, code + "1");
 }
 
-void test_huffman_tree_build() {
-    std::vector<uchar> vec = {4,1,3,2,2,3,1,4};
+/**
+ * Huffman encodes the given byte array
+ */
+std::vector<uchar> Huffman::encode_data(std::vector<int> data) {
+    build_huffman_tree(data);
+    build_encodings_map(this->root, "");
+    std::cout << this->root->left->freq << std::endl;
+    std::cout << this->root->right->freq << std::endl;
 
-    HuffmanNode *root = build_huffman_tree(vec);
-    std::map<uchar, std::string> encodings;
-    encode_leaves(root, "", encodings);
-    for (auto el : encodings) {
-        std::cout << static_cast<int>(el.first) << ": " << el.second << std::endl;
-    }
+    // convert byte array to its encoded binary string
+    // std::string binary_string;
+    // for (int byte : data) {
+    //     binary_string += this->encodings[byte];
+    // }
+
+    // convert new binary string into byte array
+    std::vector<uchar> byte_array;
+    // std::string byte_string;
+    // int val;
+    // for (size_t i = 0; i < binary_string.size(); i += 8) {
+    //     byte_string = binary_string.substr(i, 8);
+    //     val = std::stoi(byte_string, nullptr, 2);
+    //     byte_array.push_back(val);
+    // }
+
+    return byte_array;
+}
+
+Huffman::Huffman() {
+
+}
+
+std::map<int, std::string> Huffman::get_encodings() {
+    return this->encodings;
+}
+
+///// TESTING /////
+
+void test_huffman_tree_build() {
+    Huffman h;
+    std::vector<int> rle_data = {4,1,3,2,2,3,1,4};
+    std::vector<uchar> enc_data = h.encode_data(rle_data);
+    // std::cout << enc_data.size() << std::endl;
 }

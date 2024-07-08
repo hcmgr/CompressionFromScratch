@@ -228,7 +228,6 @@ int jpeg() {
 }
 
 int main() {
-    // jpeg();
     test_huffman_tree_build();
     return 0;
 }
