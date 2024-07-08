@@ -5,18 +5,7 @@
 
 #include "pre_computed.hpp"
 #include "huffman.hpp"
-
-void print_image_stats(cv::Mat& image) {
-    std::cout << "NROWS: " << image.rows << std::endl;
-    std::cout << "NCOLS: " << image.cols << std::endl;
-    std::cout << "NCHANNELS: " << image.channels() << std::endl;
-}
-
-void display_image(cv::Mat& image, std::string name) {
-    print_image_stats(image);
-    cv::imshow(name, image);
-    cv::waitKey(0);
-}
+#include "shared.hpp"
 
 template<typename T>
 void print_vector(const std::vector<T>& vec) {
@@ -30,19 +19,37 @@ void print_vector(const std::vector<T>& vec) {
     std::cout << " ]" << std::endl;
 }
 
-cv::Mat loadImage(std::string filename) {
-    cv::Mat image = cv::imread(filename, cv::IMREAD_COLOR);
-
-    if (image.empty()) {
-        std::cerr << "Could not open or find the image: " << filename << std::endl;
-    }
-    return image;
-}
-
 std::string getDiv2kFileName(int number) {
     std::ostringstream filename;
     filename << "DIV2K_train_HR/" << std::setfill('0') << std::setw(4) << number << ".png";
     return filename.str();
+}
+
+/**
+ * Convert image from [B,G,R] to [Y,Cb,Cr] format
+ */
+cv::Mat bgr_to_ycbcr(cv::Mat bgr_image) {
+    cv::Mat ycbcr_image(bgr_image.rows, bgr_image.cols, CV_8UC3, cv::Scalar(0, 0, 0));
+    float b, g, r;
+    float y, cb, cr;
+    for (int i = 0; i < bgr_image.rows; i++) {
+        for (int j = 0; j < bgr_image.cols; j++) {
+            cv::Vec3b &bgr_pixels = bgr_image.at<cv::Vec3b>(i, j);
+            b = bgr_pixels[0]; 
+            g = bgr_pixels[1]; 
+            r = bgr_pixels[2];
+
+            y = 0.299 * r + 0.587 * g + 0.114 * b;
+            cb = 0.564 * (b - y);
+            cr = 0.713 * (r - y);
+
+            cv::Vec3b &ycbcr_pixels = ycbcr_image.at<cv::Vec3b>(i, j);
+            ycbcr_pixels[0] = round(y); // Y
+            ycbcr_pixels[1] = round(cb); // Cb
+            ycbcr_pixels[2] = round(cr); // Cr
+        }
+    }
+    return ycbcr_image;
 }
 
 /**
@@ -170,32 +177,7 @@ int jpeg_block(cv::Mat block, JpegElements &jpegElements) {
     return 0;
 }
 
-/**
- * Convert image from [B,G,R] to [Y,Cb,Cr] format
- */
-cv::Mat bgr_to_ycbcr(cv::Mat bgr_image) {
-    cv::Mat ycbcr_image(bgr_image.rows, bgr_image.cols, CV_8UC3, cv::Scalar(0, 0, 0));
-    float b, g, r;
-    float y, cb, cr;
-    for (int i = 0; i < bgr_image.rows; i++) {
-        for (int j = 0; j < bgr_image.cols; j++) {
-            cv::Vec3b &bgr_pixels = bgr_image.at<cv::Vec3b>(i, j);
-            b = bgr_pixels[0]; 
-            g = bgr_pixels[1]; 
-            r = bgr_pixels[2];
 
-            y = 0.299 * r + 0.587 * g + 0.114 * b;
-            cb = 0.564 * (b - y);
-            cr = 0.713 * (r - y);
-
-            cv::Vec3b &ycbcr_pixels = ycbcr_image.at<cv::Vec3b>(i, j);
-            ycbcr_pixels[0] = round(y); // Y
-            ycbcr_pixels[1] = round(cb); // Cb
-            ycbcr_pixels[2] = round(cr); // Cr
-        }
-    }
-    return ycbcr_image;
-}
 
 int jpeg() {
     JpegElements jpegElements = JpegElements();
@@ -204,7 +186,7 @@ int jpeg() {
     // int num = 28;
     // std::string filename = getDiv2kFileName(num);
     std::string filename = "images/test_1.jpg";
-    cv::Mat image = loadImage(filename);
+    cv::Mat image = CvImageUtils::loadImage(filename);
     // display_image(image, "");
 
     // convert to Y, Cr, Cb format
@@ -225,6 +207,12 @@ int jpeg() {
     // TODO: concat block arrays to produce channel encodings
     // TODO: concat channel encodings to produce final data
     return 0;
+}
+
+void test_huffman_tree_build() {
+    Huffman h;
+    std::vector<int> rle_data = {4,1,3,2,2,3,1,4}; // 1,1,1,1,2,2,2,3,3,4
+    std::vector<uchar> enc_data = h.encode_data(rle_data);
 }
 
 int main() {

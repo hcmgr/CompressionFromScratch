@@ -1,3 +1,6 @@
+#ifndef PRE_COMPUTED_H
+#define PRE_COMPUTED_H
+
 #include <opencv2/opencv.hpp>
 #define BLOCK_SIZE 8
 
@@ -71,3 +74,5 @@ public:
      */
     void populate_zig_zag_indices();
 };
+
+#endif // PRE_COMPUTED_H

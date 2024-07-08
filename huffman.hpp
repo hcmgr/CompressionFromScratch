@@ -1,3 +1,6 @@
+#ifndef HUFFMAN_H
+#define HUFFMAN_H
+
 #include <map>
 #include <queue>
 #include <opencv2/opencv.hpp>
@@ -51,4 +54,4 @@ public:
     std::map<int, std::string> get_encodings();
 };
 
-void test_huffman_tree_build();
+#endif // HUFFMAN_H

@@ -6,6 +6,8 @@
 HuffmanNode::HuffmanNode(int val, int freq) { // leaf
     this->val = val;
     this->freq = freq;
+    this->left = nullptr;
+    this->right = nullptr;
 }
 
 HuffmanNode::HuffmanNode(HuffmanNode *left, HuffmanNode *right) { // non-leaf
@@ -80,20 +82,21 @@ std::vector<uchar> Huffman::encode_data(std::vector<int> data) {
     build_encodings_map(this->root, "");
 
     // convert byte array to its encoded binary string
-    // std::string binary_string;
-    // for (int byte : data) {
-    //     binary_string += this->encodings[byte];
-    // }
+    std::string binary_string;
+    for (int byte : data) {
+        binary_string += this->encodings[byte];
+    }
+    std::cout << binary_string << std::endl;
 
     // convert new binary string into byte array
     std::vector<uchar> byte_array;
-    // std::string byte_string;
-    // int val;
-    // for (size_t i = 0; i < binary_string.size(); i += 8) {
-    //     byte_string = binary_string.substr(i, 8);
-    //     val = std::stoi(byte_string, nullptr, 2);
-    //     byte_array.push_back(val);
-    // }
+    std::string byte_string;
+    int val;
+    for (size_t i = 0; i < binary_string.size(); i += 8) {
+        byte_string = binary_string.substr(i, 8);
+        val = std::stoi(byte_string, nullptr, 2);
+        byte_array.push_back(val);
+    }
 
     return byte_array;
 }
@@ -108,8 +111,3 @@ std::map<int, std::string> Huffman::get_encodings() {
 
 ///// TESTING /////
 
-void test_huffman_tree_build() {
-    Huffman h;
-    std::vector<int> rle_data = {4,1,3,2,2,3,1,4};
-    std::vector<uchar> enc_data = h.encode_data(rle_data);
-}
