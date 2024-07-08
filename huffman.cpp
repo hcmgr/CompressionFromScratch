@@ -78,8 +78,6 @@ void Huffman::build_encodings_map(HuffmanNode *root, std::string code) {
 std::vector<uchar> Huffman::encode_data(std::vector<int> data) {
     build_huffman_tree(data);
     build_encodings_map(this->root, "");
-    std::cout << this->root->left->freq << std::endl;
-    std::cout << this->root->right->freq << std::endl;
 
     // convert byte array to its encoded binary string
     // std::string binary_string;
@@ -114,5 +112,4 @@ void test_huffman_tree_build() {
     Huffman h;
     std::vector<int> rle_data = {4,1,3,2,2,3,1,4};
     std::vector<uchar> enc_data = h.encode_data(rle_data);
-    // std::cout << enc_data.size() << std::endl;
 }
