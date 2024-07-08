@@ -4,6 +4,7 @@
 #include <cmath>
 
 #include "pre_computed.hpp"
+#include "huffman.hpp"
 
 void print_image_stats(cv::Mat& image) {
     std::cout << "NROWS: " << image.rows << std::endl;
@@ -29,30 +30,19 @@ void print_vector(const std::vector<T>& vec) {
     std::cout << " ]" << std::endl;
 }
 
-/**
- * Convert image from [B,G,R] to [Y,Cb,Cr] format
- */
-cv::Mat bgr_to_ycbcr(cv::Mat bgr_image) {
-    cv::Mat ycbcr_image(bgr_image.rows, bgr_image.cols, CV_8UC3, cv::Scalar(0, 0, 0));
-    float b, g, r, y, cb, cr;
-    for (int i = 0; i < bgr_image.rows; i++) {
-        for (int j = 0; j < bgr_image.cols; j++) {
-            cv::Vec3b &bgr_pixels = bgr_image.at<cv::Vec3b>(i, j);
-            b = bgr_pixels[0]; 
-            g = bgr_pixels[1]; 
-            r = bgr_pixels[2];
+cv::Mat loadImage(std::string filename) {
+    cv::Mat image = cv::imread(filename, cv::IMREAD_COLOR);
 
-            y = 0.299 * r + 0.587 * g + 0.114 * b;
-            cb = 0.564 * (b - y);
-            cr = 0.713 * (r - y);
-
-            cv::Vec3b &ycbcr_pixels = ycbcr_image.at<cv::Vec3b>(i, j);
-            ycbcr_pixels[0] = cv::saturate_cast<uchar>(round(y));
-            ycbcr_pixels[1] = cv::saturate_cast<uchar>(round(cb));
-            ycbcr_pixels[2] = cv::saturate_cast<uchar>(round(cr));
-        }
+    if (image.empty()) {
+        std::cerr << "Could not open or find the image: " << filename << std::endl;
     }
-    return ycbcr_image;
+    return image;
+}
+
+std::string getDiv2kFileName(int number) {
+    std::ostringstream filename;
+    filename << "DIV2K_train_HR/" << std::setfill('0') << std::setw(4) << number << ".png";
+    return filename.str();
 }
 
 /**
@@ -144,26 +134,6 @@ std::vector<int> rle(std::vector<int> block_array) {
 }
 
 /**
- * Perform huffman encoding on the given rle-encoded array of bytes
- */
-std::vector<uchar> huffman(std::vector<uchar> rle_array);
-
-cv::Mat loadImage(std::string filename) {
-    cv::Mat image = cv::imread(filename, cv::IMREAD_COLOR);
-
-    if (image.empty()) {
-        std::cerr << "Could not open or find the image: " << filename << std::endl;
-    }
-    return image;
-}
-
-cv::Mat loadImageFromDiv2k(int number) {
-    std::ostringstream filename;
-    filename << "DIV2K_train_HR/" << std::setfill('0') << std::setw(4) << number << ".png";
-    return loadImage(filename.str());
-}
-
-/**
  * Apply jpeg steps for given block:
  *  - normalise
  *  - DCT
@@ -200,28 +170,57 @@ int jpeg_block(cv::Mat block, JpegElements &jpegElements) {
     return 0;
 }
 
+/**
+ * Convert image from [B,G,R] to [Y,Cb,Cr] format
+ */
+cv::Mat bgr_to_ycbcr(cv::Mat bgr_image) {
+    cv::Mat ycbcr_image(bgr_image.rows, bgr_image.cols, CV_8UC3, cv::Scalar(0, 0, 0));
+    float b, g, r;
+    float y, cb, cr;
+    for (int i = 0; i < bgr_image.rows; i++) {
+        for (int j = 0; j < bgr_image.cols; j++) {
+            cv::Vec3b &bgr_pixels = bgr_image.at<cv::Vec3b>(i, j);
+            b = bgr_pixels[0]; 
+            g = bgr_pixels[1]; 
+            r = bgr_pixels[2];
+
+            y = 0.299 * r + 0.587 * g + 0.114 * b;
+            cb = 0.564 * (b - y);
+            cr = 0.713 * (r - y);
+
+            cv::Vec3b &ycbcr_pixels = ycbcr_image.at<cv::Vec3b>(i, j);
+            ycbcr_pixels[0] = round(y); // Y
+            ycbcr_pixels[1] = round(cb); // Cb
+            ycbcr_pixels[2] = round(cr); // Cr
+        }
+    }
+    return ycbcr_image;
+}
+
 int jpeg() {
     JpegElements jpegElements = JpegElements();
 
     // load image
-    int num = 28;
-    cv::Mat image = loadImageFromDiv2k(num);
-    display_image(image, "");
+    // int num = 28;
+    // std::string filename = getDiv2kFileName(num);
+    std::string filename = "images/test_1.jpg";
+    cv::Mat image = loadImage(filename);
+    // display_image(image, "");
 
     // convert to Y, Cr, Cb format
     cv::Mat new_image = bgr_to_ycbcr(image);
-    display_image(new_image, "");
+    // display_image(new_image, "");
 
     // split into channels
-    // std::vector<cv::Mat> channels;
-    // split(image, channels);
-    // cv::Mat curr_channel = channels[0]; // Y
+    std::vector<cv::Mat> channels;
+    split(image, channels);
+    cv::Mat curr_channel = channels[0]; // Y
     
-    // // extract block and apply jpeg on it
-    // int r = image.rows / 2, c = image.cols / 2;
-    // cv::Rect block_rect(r, c, 8, 8);
-    // cv::Mat block = curr_channel(block_rect).clone();
-    // jpeg_block(block, jpegElements);
+    // extract block and apply jpeg on it
+    int r = image.rows / 3, c = image.cols / 3;
+    cv::Rect block_rect(r, c, 8, 8);
+    cv::Mat block = curr_channel(block_rect).clone();
+    jpeg_block(block, jpegElements);
 
     // TODO: concat block arrays to produce channel encodings
     // TODO: concat channel encodings to produce final data
@@ -229,6 +228,7 @@ int jpeg() {
 }
 
 int main() {
-    jpeg();
+    // jpeg();
+    test_huffman_tree_build();
     return 0;
 }
