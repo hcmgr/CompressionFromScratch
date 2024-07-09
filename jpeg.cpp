@@ -6,18 +6,7 @@
 #include "pre_computed.hpp"
 #include "huffman.hpp"
 #include "shared.hpp"
-
-template<typename T>
-void print_vector(const std::vector<T>& vec) {
-    std::cout << "[ ";
-    for (size_t i = 0; i < vec.size(); ++i) {
-        std::cout << vec[i];
-        if (i != vec.size() - 1) {
-            std::cout << ", ";
-        }
-    }
-    std::cout << " ]" << std::endl;
-}
+#include "rle.hpp"
 
 std::string getDiv2kFileName(int number) {
     std::ostringstream filename;
@@ -120,27 +109,6 @@ std::vector<int> block_to_zig_zag(cv::Mat block, JpegElements &jpegElements) {
 }
 
 /**
- * Run-length-encoding of given block array
- */
-std::vector<int> rle(std::vector<int> block_array) {
-    std::vector<int> rle_array;
-
-    int n = block_array.size();
-    int i = 0, j = 0;
-    while (i < n) {
-        j = i+1;
-        while (block_array[j] == block_array[i]) {
-            j++;
-        }
-        rle_array.push_back((j - i)); // count
-        rle_array.push_back((block_array[i])); // number
-        i = j;
-    }
-
-    return rle_array;
-}
-
-/**
  * Apply jpeg steps for given block:
  *  - normalise
  *  - DCT
@@ -167,17 +135,15 @@ int jpeg_block(cv::Mat block, JpegElements &jpegElements) {
     // convert to flattened uchar array in zig-zag order
     std::vector<int> block_array = block_to_zig_zag(block, jpegElements);
     std::cout << "Zig-zag encoded" << std::endl;
-    print_vector(block_array);
+    PrintUtils::print_vector(block_array);
 
     // rle encode
-    std::vector<int> rle_block_array = rle(block_array);
+    std::vector<int> rle_block_array = Rle::rle_encode(block_array);
     std::cout << "RLE encoded" << std::endl;
-    print_vector(rle_block_array);
+    PrintUtils::print_vector(rle_block_array);
     std::cout << "Size: " << rle_block_array.size() << std::endl;
     return 0;
 }
-
-
 
 int jpeg() {
     JpegElements jpegElements = JpegElements();
@@ -211,11 +177,12 @@ int jpeg() {
 
 void test_huffman_tree_build() {
     Huffman h;
-    std::vector<int> rle_data = {4,1,3,2,2,3,1,4}; // 1,1,1,1,2,2,2,3,3,4
-    std::vector<uchar> enc_data = h.encode_data(rle_data);
+    std::vector<int> data = {64,64,32,64,5,2,2,5};
+    std::vector<uchar> enc_data = h.encode_data(data);
 }
 
 int main() {
+    // jpeg();
     test_huffman_tree_build();
     return 0;
 }

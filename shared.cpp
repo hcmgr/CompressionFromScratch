@@ -35,4 +35,4 @@ namespace CvImageUtils {
         std::cout << "NCOLS: " << image.cols << std::endl;
         std::cout << "NCHANNELS: " << image.channels() << std::endl;
     }
-}
+};

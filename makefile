@@ -1,6 +1,6 @@
 CC = g++
 OPENCV_FLAGS = `pkg-config --libs --cflags opencv4`
-SRCS = jpeg.cpp pre_computed.cpp huffman.cpp shared.cpp
+SRCS = jpeg.cpp pre_computed.cpp huffman.cpp shared.cpp rle.cpp
 EXEC = jpeg
 
 jpeg: $(SRCS)

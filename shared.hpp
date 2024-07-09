@@ -22,6 +22,39 @@ namespace CvImageUtils {
      * Pretty prints various cv::Mat image statistics
      */
     void print_image_stats(cv::Mat& image);
-}
+};
+
+/**
+ * Collection of utilty functions to print data structures nicely
+ */
+namespace PrintUtils {
+
+    /**
+     * Pretty-print std::vector<T>
+     */
+    template<typename T>
+    void print_vector(const std::vector<T>& vec) {
+        std::cout << "[ ";
+        for (size_t i = 0; i < vec.size(); ++i) {
+            std::cout << vec[i];
+            if (i != vec.size() - 1) {
+                std::cout << ", ";
+            }
+        }
+        std::cout << " ]" << std::endl;
+    }
+
+    /**
+     * Pretty-print std::map<K, V>
+     */
+    template <typename K, typename V>
+    void print_map(const std::map<K, V>& m) {
+        std::cout << "{\n";
+        for (const auto& pair : m) {
+            std::cout << "  " << pair.first << ": " << pair.second << "\n";
+        }
+        std::cout << "}\n";
+    }
+};
 
 #endif // SHARED_H

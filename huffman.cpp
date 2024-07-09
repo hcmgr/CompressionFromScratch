@@ -2,6 +2,8 @@
 #include <queue>
 #include <opencv2/opencv.hpp>
 #include "huffman.hpp"
+#include "shared.hpp"
+#include "rle.hpp"
 
 HuffmanNode::HuffmanNode(int val, int freq) { // leaf
     this->val = val;
@@ -25,14 +27,16 @@ HuffmanNode::HuffmanNode(HuffmanNode *left, HuffmanNode *right) { // non-leaf
 
 /**
  * Builds the huffman encoding tree
+ * 
+ * NOTE: expects data to be run-length-encoded
  */
-void Huffman::build_huffman_tree(std::vector<int> data) {
+void Huffman::build_huffman_tree(std::vector<int> rle_data) {
     // build up frequency map
     std::map<int, int> freqCount;
-    int n = data.size();
+    int n = rle_data.size();
     int f, el;
     for (int i = 0; i < n; i+=2) {
-        f = data[i], el = data[i+1];
+        f = rle_data[i], el = rle_data[i+1];
         freqCount[el] += f;
     }
 
@@ -78,7 +82,11 @@ void Huffman::build_encodings_map(HuffmanNode *root, std::string code) {
  * Huffman encodes the given byte array
  */
 std::vector<uchar> Huffman::encode_data(std::vector<int> data) {
-    build_huffman_tree(data);
+    // rle encode the data
+    std::vector<int> rle_data = Rle::rle_encode(data);
+
+    // calculate encodings
+    build_huffman_tree(rle_data);
     build_encodings_map(this->root, "");
 
     // convert byte array to its encoded binary string
@@ -86,6 +94,8 @@ std::vector<uchar> Huffman::encode_data(std::vector<int> data) {
     for (int byte : data) {
         binary_string += this->encodings[byte];
     }
+
+    PrintUtils::print_map(encodings);
     std::cout << binary_string << std::endl;
 
     // convert new binary string into byte array
@@ -99,10 +109,6 @@ std::vector<uchar> Huffman::encode_data(std::vector<int> data) {
     }
 
     return byte_array;
-}
-
-Huffman::Huffman() {
-
 }
 
 std::map<int, std::string> Huffman::get_encodings() {

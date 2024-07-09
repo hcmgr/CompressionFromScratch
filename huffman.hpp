@@ -44,8 +44,6 @@ private:
     void build_encodings_map(HuffmanNode *root, std::string code);
 
 public:
-    Huffman();
-    
     /**
      * Huffman encodes the given byte array
      */
