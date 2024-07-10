@@ -6,6 +6,10 @@ JpegElements::JpegElements() {
     populate_zig_zag_indices();
 }
 
+JpegElements::~JpegElements() {
+
+}
+
 /**
  * Returns quant. matrix as a cv::Mat
  */

@@ -47,19 +47,43 @@ cv::Mat bgr_to_ycbcr(cv::Mat bgr_image) {
 void dct_block(cv::Mat block, JpegElements &jpegElements) {
     float temp;
     int N = block.rows;
-    int r,c,i,j;
-    for (r = 0; r < N; r++) {
-        for (c = 0; c < N; c++) {
+    int u,v,i,j;
+    for (u = 0; u < N; u++) {
+        for (v = 0; v < N; v++) {
             temp = 0.0;
             for (i = 0; i < N; i++) {
                 for (j = 0; j < N; j++) {
-                    temp += jpegElements.dct_cosines[r][i] * 
-                            jpegElements.dct_cosines[c][j] * 
-                            block.at<float>(i, j);
+                    // temp += jpegElements.dct_cosines[u][i] * 
+                    //         jpegElements.dct_cosines[v][j] * 
+                    //         block.at<float>(i, j);
+                    temp += block.at<float>(i, j);
                 }
             }
-            temp *= jpegElements.dct_coefs[r][c];
-            block.at<float>(r, c) = round(temp);
+            temp *= jpegElements.dct_coefs[u][v];
+            block.at<float>(u, v) = round(temp);
+        }
+    }
+}
+
+/**
+ * Performs the inverse DCT step on the given 8x8 block
+ */
+void inverse_dct_block(cv::Mat block, JpegElements &jpegElements) {
+    float temp;
+    int N = block.rows;
+    int i,j,u,v;
+    for (i = 0; i < N; i++) {
+        for (j = 0; j < N; j++) {
+            temp = 0.0;
+            for (u = 0; u < N; u++) {
+                for (v = 0; v < N; v++) {
+                    temp += jpegElements.dct_cosines[i][u] * 
+                            jpegElements.dct_cosines[j][v] * 
+                            block.at<float>(u, v);
+                }
+            }
+            temp *= jpegElements.dct_coefs[u][v];
+            block.at<float>(u, v) = round(temp);
         }
     }
 }
@@ -136,28 +160,25 @@ int jpeg_block(cv::Mat block, JpegElements &jpegElements) {
     std::vector<int> block_array = block_to_zig_zag(block, jpegElements);
     std::cout << "Zig-zag encoded" << std::endl;
     PrintUtils::print_vector(block_array);
+    
+    // huffman encode
+    Huffman h;
+    std::vector<uchar> huff_encoded_data = h.encode_data(block_array);
+    std::cout << std::endl << "Final byte array: (" << huff_encoded_data.size() << ")" << std::endl;
+    PrintUtils::print_vector(huff_encoded_data);
 
-    // rle encode
-    std::vector<int> rle_block_array = Rle::rle_encode(block_array);
-    std::cout << "RLE encoded" << std::endl;
-    PrintUtils::print_vector(rle_block_array);
-    std::cout << "Size: " << rle_block_array.size() << std::endl;
     return 0;
 }
 
 int jpeg() {
     JpegElements jpegElements = JpegElements();
-
-    // load image
-    // int num = 28;
-    // std::string filename = getDiv2kFileName(num);
     std::string filename = "images/test_1.jpg";
     cv::Mat image = CvImageUtils::loadImage(filename);
-    // display_image(image, "");
+    CvImageUtils::display_image(image, "");
 
     // convert to Y, Cr, Cb format
     cv::Mat new_image = bgr_to_ycbcr(image);
-    // display_image(new_image, "");
+    CvImageUtils::display_image(new_image, "");
 
     // split into channels
     std::vector<cv::Mat> channels;
@@ -177,12 +198,30 @@ int jpeg() {
 
 void test_huffman_tree_build() {
     Huffman h;
-    std::vector<int> data = {64,64,32,64,5,2,2,5};
+    std::vector<int> data = {1,1,2,2,3,3,4,4};
     std::vector<uchar> enc_data = h.encode_data(data);
+}
+
+void test_dct_inverse() {
+    JpegElements jpegElements = JpegElements();
+
+    // initialise random 8x8 block
+    cv::Mat rand_block(8, 8, CV_8UC1);
+    cv::randu(rand_block, 0, 256);
+    std::cout << rand_block << std::endl << std::endl;
+
+    // dct
+    dct_block(rand_block, jpegElements);
+    // std::cout << rand_block << std::endl << std::endl;
+
+    // inverse dct
+    // inverse_dct_block(rand_block, jpegElements);
+    // std::cout << rand_block << std::endl;
 }
 
 int main() {
     // jpeg();
-    test_huffman_tree_build();
+    // test_huffman_tree_build();
+    test_dct_inverse();
     return 0;
 }

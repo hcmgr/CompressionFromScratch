@@ -95,7 +95,9 @@ std::vector<uchar> Huffman::encode_data(std::vector<int> data) {
         binary_string += this->encodings[byte];
     }
 
+    std::cout << std::endl << "Encodings map" << std::endl;
     PrintUtils::print_map(encodings);
+    std::cout << std::endl << "Full binary string: (" << binary_string.size() << ")" << std::endl;
     std::cout << binary_string << std::endl;
 
     // convert new binary string into byte array

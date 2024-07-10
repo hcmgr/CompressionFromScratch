@@ -49,6 +49,8 @@ public:
 
     JpegElements(); // constructor
 
+    ~JpegElements(); // destructor
+
     /**
      * Stores zig-zag ordering of block indices
      */

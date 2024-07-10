@@ -36,7 +36,7 @@ namespace PrintUtils {
     void print_vector(const std::vector<T>& vec) {
         std::cout << "[ ";
         for (size_t i = 0; i < vec.size(); ++i) {
-            std::cout << vec[i];
+            std::cout << static_cast<int>(vec[i]);
             if (i != vec.size() - 1) {
                 std::cout << ", ";
             }
