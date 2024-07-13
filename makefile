@@ -1,10 +1,14 @@
-CC = g++
+CXX = g++
+CXXFLAGS = -std=c++11 -O2 -Wall
 OPENCV_FLAGS = `pkg-config --libs --cflags opencv4`
-SRCS = jpeg.cpp pre_computed.cpp huffman.cpp shared.cpp rle.cpp
-EXEC = jpeg
+SRCDIR = src
+OBJDIR = obj
+TARGET = jpeg
 
-jpeg: $(SRCS)
-	$(CC) $(CFLAGS) -o $(EXEC) $(SRCS) $(OPENCV_FLAGS)
+SOURCES = $(wildcard $(SRCDIR)/*.cpp)
+
+$(TARGET): $(SOURCES)
+	$(CXX) $(CXXFLAGS) -o $@ $^ $(OPENCV_FLAGS)
 
 clean:
-	rm -f $(EXEC) *.out
+	rm -f $(TARGET) *.out

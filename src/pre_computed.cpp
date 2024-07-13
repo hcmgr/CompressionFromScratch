@@ -24,7 +24,7 @@ void JpegElements::populate_dct_cosines_matrix() {
     double temp;
     for (int i = 0; i < BLOCK_SIZE; i++) {
         for (int j = 0; j < BLOCK_SIZE; j++) {
-            temp = (2*i+1)*j*M_PI / 2 / BLOCK_SIZE;
+            temp = (2*i+1)*j*M_PI / 16;
             dct_cosines[i][j] = cos(temp);
         }
     }
@@ -37,7 +37,7 @@ void JpegElements::populate_dct_coefs_matrix() {
     float temp;
     for (int i = 0; i < BLOCK_SIZE; i++) {
         for (int j = 0; j < BLOCK_SIZE; j++) {
-            temp = 1 / sqrt(2 * BLOCK_SIZE);
+            temp = 1;
             if (i == 0) {
                 temp *= (1 / sqrt(2));
             }
