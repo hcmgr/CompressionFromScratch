@@ -22,7 +22,6 @@ namespace CvImageUtils {
      * Displays the given cv::Mat image in a window of the given name
      */
     void display_image(cv::Mat& image, std::string name) {
-        print_image_stats(image);
         cv::imshow(name, image);
         cv::waitKey(0);
     }

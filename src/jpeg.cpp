@@ -171,24 +171,24 @@ std::vector<int> block_to_zig_zag(cv::Mat block, JpegElements &jpegElements) {
  *  - zig-zag
  *  - entropy encode
  */
-int jpeg_block(cv::Mat block, JpegElements &jpegElements) {
-    std::cout << "Init" << std::endl << block << std::endl << std::endl;
+cv::Mat jpeg_block(cv::Mat block, JpegElements &jpegElements) {
+    // std::cout << "Init" << std::endl << block << std::endl << std::endl;
 
     // pre-process
     block.convertTo(block, CV_32F);
     cv::Mat normBlock(8, 8, CV_32F);
     cv::subtract(block, cv::Scalar(128), normBlock);
-    std::cout << "Normalised" << std::endl << normBlock << std::endl << std::endl;
+    // std::cout << "Normalised" << std::endl << normBlock << std::endl << std::endl;
 
     // dct
     cv::Mat dctBlock(8, 8, CV_32F);
     dct_block(dctBlock, normBlock, jpegElements);
-    std::cout << "DCT'd" << std::endl << dctBlock << std::endl << std::endl;
+    // std::cout << "DCT'd" << std::endl << dctBlock << std::endl << std::endl;
 
     // quantise block
     cv::Mat quantBlock(8, 8, CV_32F);
     quantise_block(quantBlock, dctBlock, jpegElements);
-    std::cout << "Quantised" << std::endl << quantBlock << std::endl << std::endl;
+    // std::cout << "Quantised" << std::endl << quantBlock << std::endl << std::endl;
 
     // // convert to flattened uchar array in zig-zag order
     // std::vector<int> block_array = block_to_zig_zag(quantBlock, jpegElements);
@@ -198,15 +198,15 @@ int jpeg_block(cv::Mat block, JpegElements &jpegElements) {
     // inverse dct
     cv::Mat invDctBlock(8, 8, CV_32F);
     inverse_dct_block(invDctBlock, quantBlock, jpegElements);
-    std::cout << "Inverted" << std::endl << invDctBlock << std::endl << std::endl;
+    // std::cout << "Inverted" << std::endl << invDctBlock << std::endl << std::endl;
 
     // de-normalised
     invDctBlock += 128;
-    std::cout << "De-normalised" << std::endl << invDctBlock << std::endl << std::endl;
+    // std::cout << "De-normalised" << std::endl << invDctBlock << std::endl << std::endl;
 
     cv::Mat diffs(8, 8, CV_32F);
     cv::subtract(block, invDctBlock, diffs);
-    std::cout << "Diffs" << std::endl << diffs << std::endl << std::endl;
+    // std::cout << "Diffs" << std::endl << diffs << std::endl << std::endl;
     
     // huffman encode
     // Huffman h;
@@ -214,29 +214,46 @@ int jpeg_block(cv::Mat block, JpegElements &jpegElements) {
     // std::cout << std::endl << "Final byte array: (" << huff_encoded_data.size() << ")" << std::endl;
     // PrintUtils::print_vector(huff_encoded_data);
 
-    return 0;
+    return diffs;
 }
 
 int jpeg() {
     JpegElements jpegElements = JpegElements();
-    std::string filename = "images/test_1.jpg";
+    // std::string filename = "images/test_2.png";
+    std::string filename = getDiv2kFileName(1);
     cv::Mat image = CvImageUtils::loadImage(filename);
-    // CvImageUtils::display_image(image, "");
+    CvImageUtils::print_image_stats(image);
 
     // convert to Y, Cr, Cb format
     cv::Mat new_image = bgr_to_ycbcr(image);
-    // CvImageUtils::display_image(new_image, "");
 
     // split into channels
     std::vector<cv::Mat> channels;
     split(image, channels);
-    cv::Mat curr_channel = channels[0]; // Y
     
     // extract block and apply jpeg on it
-    int r = image.rows / 8, c = image.cols / 2;
-    cv::Rect block_rect(r, c, 8, 8);
-    cv::Mat block = curr_channel(block_rect).clone();
-    jpeg_block(block, jpegElements);
+    cv::Mat cumDiff(8, 8, CV_32F, cv::Scalar(0));
+    cv::Mat curr_channel, block, diffs;
+    int i = 0, N = 100;
+
+    for (int channel = 0; channel < 3; channel++) {
+        curr_channel = channels[channel];
+        for (int r = 10; r < 8*N; r+=8) {
+            for (int c = 10; c < 8*N; c+=8) {
+                cv::Rect block_rect(r, c, 8, 8);
+                block = curr_channel(block_rect).clone();
+                
+                diffs = jpeg_block(block, jpegElements);
+                cv::add(cumDiff, diffs, cumDiff);
+
+                i++;
+            }
+        }
+    }
+    std::cout << i << std::endl;
+    std::cout << std::endl << "Average diffs" << std::endl;
+    std::cout << cumDiff / i << std::endl;
+    std::cout << cv::mean(cumDiff / i)[0] << std::endl;
 
     // TODO: concat block arrays to produce channel encodings
     // TODO: concat channel encodings to produce final data
