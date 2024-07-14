@@ -255,8 +255,9 @@ void test_dct_inverse() {
 
 void experiment() {
     Experiments exp;
+    exp.blacken_pixels();
     // exp.remove_pixels();
-    exp.avg_pool();
+    // exp.avg_pool();
     // exp.max_pool();
 }
 

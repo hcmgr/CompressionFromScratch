@@ -11,10 +11,13 @@ public:
     Experiments(); 
 
     /**
-     * Remove x% of pixels
+     * Blacken x% of pixels
      */
     void blacken_pixels();
 
+    /**
+     * Remove x% of pixels
+     */
     void remove_pixels();
 
     /**
