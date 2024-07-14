@@ -7,6 +7,7 @@
 #include "huffman.hpp"
 #include "shared.hpp"
 #include "rle.hpp"
+#include "experiments.hpp"
 
 std::string getDiv2kFileName(int number) {
     std::ostringstream filename;
@@ -88,42 +89,6 @@ void inverse_dct_block(cv::Mat invBlock, cv::Mat dctBlock, JpegElements &jpegEle
         }
     }
 }
-
-// void dct_block(cv::Mat DCTMatrix, cv::Mat Matrix, int N, int M){
-//     int i, j, u, v;
-//     for (u = 0; u < N; ++u) {
-//         for (v = 0; v < M; ++v) {
-//         DCTMatrix.at<float>(u, v) = 0;
-//             for (i = 0; i < N; i++) {
-//                 for (j = 0; j < M; j++) {
-//                     DCTMatrix.at<float>(u, v) += Matrix.at<float>(i, j) * cos(M_PI/((float)N)*(i+1./2.)*u)*cos(M_PI/((float)M)*(j+1./2.)*v);
-//                 }               
-//             }
-//         }
-//     }  
-//  }
-
-// void inverse_dct_block(cv::Mat Matrix, cv::Mat DCTMatrix, int N, int M){
-//     int i, j, u, v;
-//     for (u = 0; u < N; ++u) {
-//         for (v = 0; v < M; ++v) {
-//           Matrix.at<float>(u, v) = 1/4.*DCTMatrix.at<float>(0,0);
-//           for(i = 1; i < N; i++){
-//           Matrix.at<float>(u, v) = 1/2.*DCTMatrix.at<float>(i,0);
-//            }
-//            for(j = 1; j < M; j++){
-//           Matrix.at<float>(u, v) = 1/2.*DCTMatrix.at<float>(0,j);
-//            }
-
-//            for (i = 1; i < N; i++) {
-//                 for (j = 1; j < M; j++) {
-//                     Matrix.at<float>(u, v) += DCTMatrix.at<float>(i, j) * cos(M_PI/((float)N)*(u+1./2.)*i)*cos(M_PI/((float)M)*(v+1./2.)*j);
-//                 }               
-//             }
-//         Matrix.at<float>(u, v) *= 2./((float)N)*2./((float)M);
-//         }
-//     }  
-//  }
 
 /**
  * Performs quantisation step on the given 8x8 block
@@ -288,8 +253,16 @@ void test_dct_inverse() {
     std::cout << invDctBlock << std::endl;
 }
 
+void experiment() {
+    Experiments exp;
+    // exp.remove_pixels();
+    exp.avg_pool();
+    // exp.max_pool();
+}
+
 int main() {
-    jpeg();
+    // jpeg();
+    experiment();
     // test_huffman_tree_build();
     // test_dct_inverse();
     return 0;
