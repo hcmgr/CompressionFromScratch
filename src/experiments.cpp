@@ -91,7 +91,7 @@ void Experiments::remove_pixels() {
 void Experiments::avg_pool() {
     CvImageUtils::display_image(this->image, "Before");
 
-    int kern_size = 7;
+    int kern_size = 3;
     int newRows = this->image.rows / kern_size;
     int newCols = this->image.cols / kern_size;
     cv::Mat pooledImage(newRows, newCols, this->image.type());
@@ -126,7 +126,7 @@ void Experiments::avg_pool() {
 void Experiments::max_pool() {
     CvImageUtils::display_image(this->image, "Before");
 
-    int kern_size = 7;
+    int kern_size = 3;
     int newRows = this->image.rows / kern_size;
     int newCols = this->image.cols / kern_size;
     cv::Mat pooledImage(newRows, newCols, this->image.type());

@@ -16,6 +16,20 @@ std::string getDiv2kFileName(int number) {
 }
 
 /**
+ * Pads given image to ensure its dimensions are a multiple of 'blockSize'
+ */
+cv::Mat pad_for_jpeg(cv::Mat image, int blockSize) {
+    int padRows = blockSize - (image.rows % blockSize);
+    int padCols = blockSize - (image.cols % blockSize);
+    if (padRows == blockSize) padRows = 0;
+    if (padCols == blockSize) padCols = 0;
+
+    cv::Mat paddedImage;
+    cv::copyMakeBorder(image, paddedImage, 0, padRows, 0, padCols, cv::BORDER_REPLICATE);
+    return paddedImage;
+}
+
+/**
  * Convert image from [B,G,R] to [Y,Cb,Cr] format
  */
 cv::Mat bgr_to_ycbcr(cv::Mat bgr_image) {
@@ -184,45 +198,68 @@ cv::Mat jpeg_block(cv::Mat block, JpegElements &jpegElements) {
 
 int jpeg() {
     JpegElements jpegElements = JpegElements();
-    // std::string filename = "images/test_2.png";
-    std::string filename = getDiv2kFileName(1);
+
+    // load image
+    // std::string filename = "images/test_1.jpg";
+    std::string filename = getDiv2kFileName(780);
     cv::Mat image = CvImageUtils::loadImage(filename);
+    // CvImageUtils::display_image(image, "");
     CvImageUtils::print_image_stats(image);
 
+    // pad to make dimensions multiple of 8
+    cv::Mat paddedImage = pad_for_jpeg(image, 8);
+
     // convert to Y, Cr, Cb format
-    cv::Mat new_image = bgr_to_ycbcr(image);
+    cv::Mat newImage = bgr_to_ycbcr(paddedImage);
 
     // split into channels
     std::vector<cv::Mat> channels;
-    split(image, channels);
+    split(newImage, channels);
     
     // extract block and apply jpeg on it
-    cv::Mat cumDiff(8, 8, CV_32F, cv::Scalar(0));
+    // cv::Mat cumDiff(8, 8, CV_32F, cv::Scalar(0));
     cv::Mat curr_channel, block, diffs;
-    int i = 0, N = 100;
+    
+    int M = newImage.rows, N = newImage.cols;
+    int predNumBlocks = (M / 8) * (N / 8) * 3;
+    int count = 0;
 
     for (int channel = 0; channel < 3; channel++) {
         curr_channel = channels[channel];
-        for (int r = 10; r < 8*N; r+=8) {
-            for (int c = 10; c < 8*N; c+=8) {
-                cv::Rect block_rect(r, c, 8, 8);
+        for (int r = 0; r < M; r+=8) {
+            for (int c = 0; c < N; c+=8) {
+                cv::Rect block_rect(c, r, 8, 8);
                 block = curr_channel(block_rect).clone();
-                
-                diffs = jpeg_block(block, jpegElements);
-                cv::add(cumDiff, diffs, cumDiff);
-
-                i++;
+                count++;
             }
         }
     }
-    std::cout << i << std::endl;
-    std::cout << std::endl << "Average diffs" << std::endl;
-    std::cout << cumDiff / i << std::endl;
-    std::cout << cv::mean(cumDiff / i)[0] << std::endl;
+
+    std::cout << "Pred: " << predNumBlocks << std::endl;
+    std::cout << "Actual: " << count << std::endl;
+
+    // std::cout << std::endl << "Average diffs" << std::endl;
+    // std::cout << cumDiff / i << std::endl;
+    // std::cout << cv::mean(cumDiff / i)[0] << std::endl;
 
     // TODO: concat block arrays to produce channel encodings
     // TODO: concat channel encodings to produce final data
     return 0;
+}
+
+int main() {
+    jpeg();
+    return 0;
+}
+
+//// TESTING ////
+
+void experiment() {
+    Experiments exp;
+    exp.blacken_pixels();
+    exp.remove_pixels();
+    exp.avg_pool();
+    exp.max_pool();
 }
 
 void test_huffman_tree_build() {
@@ -251,20 +288,4 @@ void test_dct_inverse() {
     cv::Mat invDctBlock(8, 8, CV_32F);
     inverse_dct_block(invDctBlock, dctBlock, jpegElements);
     std::cout << invDctBlock << std::endl;
-}
-
-void experiment() {
-    Experiments exp;
-    exp.blacken_pixels();
-    // exp.remove_pixels();
-    // exp.avg_pool();
-    // exp.max_pool();
-}
-
-int main() {
-    // jpeg();
-    experiment();
-    // test_huffman_tree_build();
-    // test_dct_inverse();
-    return 0;
 }
