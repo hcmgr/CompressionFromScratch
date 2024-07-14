@@ -200,29 +200,27 @@ int jpeg() {
     JpegElements jpegElements = JpegElements();
 
     // load image
-    // std::string filename = "images/test_1.jpg";
-    std::string filename = getDiv2kFileName(780);
+    std::string filename = "images/test_1.jpg";
     cv::Mat image = CvImageUtils::loadImage(filename);
-    // CvImageUtils::display_image(image, "");
+    CvImageUtils::display_image(image, "");
     CvImageUtils::print_image_stats(image);
 
-    // pad to make dimensions multiple of 8
+    // pad to make dimensions multiple of BLOCK_SIZE
     cv::Mat paddedImage = pad_for_jpeg(image, 8);
 
     // convert to Y, Cr, Cb format
-    cv::Mat newImage = bgr_to_ycbcr(paddedImage);
+    cv::Mat ycbcrImage = bgr_to_ycbcr(paddedImage);
 
     // split into channels
     std::vector<cv::Mat> channels;
-    split(newImage, channels);
+    split(ycbcrImage, channels);
     
     // extract block and apply jpeg on it
-    // cv::Mat cumDiff(8, 8, CV_32F, cv::Scalar(0));
+    cv::Mat cumDiff(8, 8, CV_32F, cv::Scalar(0));
     cv::Mat curr_channel, block, diffs;
     
-    int M = newImage.rows, N = newImage.cols;
-    int predNumBlocks = (M / 8) * (N / 8) * 3;
-    int count = 0;
+    int M = ycbcrImage.rows, N = ycbcrImage.cols;
+    int blockNum = 0;
 
     for (int channel = 0; channel < 3; channel++) {
         curr_channel = channels[channel];
@@ -230,17 +228,16 @@ int jpeg() {
             for (int c = 0; c < N; c+=8) {
                 cv::Rect block_rect(c, r, 8, 8);
                 block = curr_channel(block_rect).clone();
-                count++;
+                cv::add(cumDiff, block, cumDiff);
+                jpeg_block(block, jpegElements);
+                blockNum++;
             }
         }
     }
 
-    std::cout << "Pred: " << predNumBlocks << std::endl;
-    std::cout << "Actual: " << count << std::endl;
-
-    // std::cout << std::endl << "Average diffs" << std::endl;
-    // std::cout << cumDiff / i << std::endl;
-    // std::cout << cv::mean(cumDiff / i)[0] << std::endl;
+    std::cout << std::endl << "Average diffs" << std::endl;
+    std::cout << cumDiff / blockNum << std::endl;
+    std::cout << cv::mean(cumDiff / blockNum)[0] << std::endl;
 
     // TODO: concat block arrays to produce channel encodings
     // TODO: concat channel encodings to produce final data
