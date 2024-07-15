@@ -32,28 +32,55 @@ cv::Mat pad_for_jpeg(cv::Mat image, int blockSize) {
 /**
  * Convert image from [B,G,R] to [Y,Cb,Cr] format
  */
-cv::Mat bgr_to_ycbcr(cv::Mat bgr_image) {
-    cv::Mat ycbcr_image(bgr_image.rows, bgr_image.cols, CV_8UC3, cv::Scalar(0, 0, 0));
+cv::Mat bgr_to_ycbcr(cv::Mat bgrImage) {
+    cv::Mat ycbcrImage(bgrImage.rows, bgrImage.cols, CV_8UC3, cv::Scalar(0, 0, 0));
     float b, g, r;
     float y, cb, cr;
-    for (int i = 0; i < bgr_image.rows; i++) {
-        for (int j = 0; j < bgr_image.cols; j++) {
-            cv::Vec3b &bgr_pixels = bgr_image.at<cv::Vec3b>(i, j);
-            b = bgr_pixels[0]; 
-            g = bgr_pixels[1]; 
-            r = bgr_pixels[2];
+    for (int i = 0; i < bgrImage.rows; i++) {
+        for (int j = 0; j < bgrImage.cols; j++) {
+            cv::Vec3b &bgrPixels = bgrImage.at<cv::Vec3b>(i, j);
+            b = bgrPixels[0]; 
+            g = bgrPixels[1]; 
+            r = bgrPixels[2];
 
             y = 0.299 * r + 0.587 * g + 0.114 * b;
-            cb = 0.564 * (b - y);
-            cr = 0.713 * (r - y);
+            cb = 128 + 0.5*b - 0.1687*r - 0.3314*g;
+            cr = 128 + 0.5*r - 0.4625*g - 0.0813*b;
 
-            cv::Vec3b &ycbcr_pixels = ycbcr_image.at<cv::Vec3b>(i, j);
-            ycbcr_pixels[0] = round(y); // Y
-            ycbcr_pixels[1] = round(cb); // Cb
-            ycbcr_pixels[2] = round(cr); // Cr
+            cv::Vec3b &ycbcrPixels = ycbcrImage.at<cv::Vec3b>(i, j);
+            ycbcrPixels[0] = MathUtils::clamp(round(y), 0, 255); // Y
+            ycbcrPixels[1] = MathUtils::clamp(round(cr), 0, 255); // Cr
+            ycbcrPixels[2] = MathUtils::clamp(round(cb), 0, 255); // Cb
         }
     }
-    return ycbcr_image;
+    return ycbcrImage;
+}
+
+cv::Mat ycbcr_to_bgr(cv::Mat ycbcrImage) {
+    cv::Mat bgrImage(ycbcrImage.rows, ycbcrImage.cols, CV_8UC3, cv::Scalar(0, 0, 0));
+    float y, cb, cr;
+    float b, g, r;
+    for (int i = 0; i < ycbcrImage.rows; i++) {
+        for (int j = 0; j < ycbcrImage.cols; j++) {
+            cv::Vec3b &ycbcrPixels = ycbcrImage.at<cv::Vec3b>(i, j);
+            y = ycbcrPixels[0]; 
+            cr = ycbcrPixels[1]; 
+            cb = ycbcrPixels[2];
+
+            cr -= 128;
+            cb -= 128;
+
+            r = y + 1.402*cr;
+            g = y - 0.344*cb - 0.714*cr;
+            b = y + 1.772*cb;
+
+            cv::Vec3b &bgrPixels = bgrImage.at<cv::Vec3b>(i, j);
+            bgrPixels[0] = MathUtils::clamp(round(b), 0, 255); // b
+            bgrPixels[1] = MathUtils::clamp(round(g), 0, 255); // g
+            bgrPixels[2] = MathUtils::clamp(round(r), 0, 255); // r
+        }
+    }
+    return bgrImage;
 }
 
 /**
@@ -155,13 +182,12 @@ cv::Mat jpeg_block(cv::Mat block, JpegElements &jpegElements) {
 
     // pre-process
     block.convertTo(block, CV_32F);
-    cv::Mat normBlock(8, 8, CV_32F);
-    cv::subtract(block, cv::Scalar(128), normBlock);
-    // std::cout << "Normalised" << std::endl << normBlock << std::endl << std::endl;
+    // block -= 128;
+    // std::cout << "Normalised" << std::endl << block << std::endl << std::endl;
 
     // dct
     cv::Mat dctBlock(8, 8, CV_32F);
-    dct_block(dctBlock, normBlock, jpegElements);
+    dct_block(dctBlock, block, jpegElements);
     // std::cout << "DCT'd" << std::endl << dctBlock << std::endl << std::endl;
 
     // quantise block
@@ -180,29 +206,30 @@ cv::Mat jpeg_block(cv::Mat block, JpegElements &jpegElements) {
     // std::cout << "Inverted" << std::endl << invDctBlock << std::endl << std::endl;
 
     // de-normalised
-    invDctBlock += 128;
+    // invDctBlock += 128;
     // std::cout << "De-normalised" << std::endl << invDctBlock << std::endl << std::endl;
 
-    cv::Mat diffs(8, 8, CV_32F);
-    cv::subtract(block, invDctBlock, diffs);
-    // std::cout << "Diffs" << std::endl << diffs << std::endl << std::endl;
-    
+    // convert back to uchar
+    cv::Mat finalBlock;
+    invDctBlock.convertTo(finalBlock, CV_8UC1);
+
     // huffman encode
     // Huffman h;
     // std::vector<uchar> huff_encoded_data = h.encode_data(block_array);
     // std::cout << std::endl << "Final byte array: (" << huff_encoded_data.size() << ")" << std::endl;
     // PrintUtils::print_vector(huff_encoded_data);
 
-    return diffs;
+    return finalBlock;
 }
 
-int jpeg() {
+int jpeg(int num) {
     JpegElements jpegElements = JpegElements();
 
     // load image
-    std::string filename = "images/test_1.jpg";
-    cv::Mat image = CvImageUtils::loadImage(filename);
-    CvImageUtils::display_image(image, "");
+    // std::string filename = "images/test_2.png";
+    std::string filename = getDiv2kFileName(num);
+    cv::Mat image = CvImageUtils::load_image(filename);
+    CvImageUtils::display_image(image, std::to_string(num));
     CvImageUtils::print_image_stats(image);
 
     // pad to make dimensions multiple of BLOCK_SIZE
@@ -215,37 +242,53 @@ int jpeg() {
     std::vector<cv::Mat> channels;
     split(ycbcrImage, channels);
     
-    // extract block and apply jpeg on it
-    cv::Mat cumDiff(8, 8, CV_32F, cv::Scalar(0));
-    cv::Mat curr_channel, block, diffs;
-    
     int M = ycbcrImage.rows, N = ycbcrImage.cols;
     int blockNum = 0;
+    cv::Mat currChannel, block, invDctBlock;
+
+    std::vector<cv::Mat> invChannels;
 
     for (int channel = 0; channel < 3; channel++) {
-        curr_channel = channels[channel];
+        currChannel = channels[channel];
+        cv::Mat invChannel = cv::Mat(M, N, CV_8UC1, cv::Scalar(0));
         for (int r = 0; r < M; r+=8) {
             for (int c = 0; c < N; c+=8) {
-                cv::Rect block_rect(c, r, 8, 8);
-                block = curr_channel(block_rect).clone();
-                cv::add(cumDiff, block, cumDiff);
-                jpeg_block(block, jpegElements);
+                cv::Rect blockRect(c, r, 8, 8);
+                block = currChannel(blockRect).clone();
+                invDctBlock = jpeg_block(block, jpegElements);
+                // std::cout << block << std::endl;
+                // std::cout << invDctBlock << std::endl << std::endl;
+                invDctBlock.copyTo(invChannel(blockRect));
                 blockNum++;
             }
         }
+        invChannels.push_back(invChannel);
     }
 
-    std::cout << std::endl << "Average diffs" << std::endl;
-    std::cout << cumDiff / blockNum << std::endl;
-    std::cout << cv::mean(cumDiff / blockNum)[0] << std::endl;
+    cv::Mat reconstructedImage;
+    merge(invChannels, reconstructedImage);
+
+    cv::Mat finalImage = ycbcr_to_bgr(reconstructedImage);
+    CvImageUtils::display_image(finalImage, std::to_string(num));
+
+    cv::destroyAllWindows();
 
     // TODO: concat block arrays to produce channel encodings
     // TODO: concat channel encodings to produce final data
     return 0;
 }
 
+void experiment();
+void test_huffman_tree_build();
+void test_dct_inverse();
+void test_ycbcr();
+
 int main() {
-    jpeg();
+    for (int i = 1; i < 10; i++) {
+        jpeg(i);
+    }
+    
+    // test_ycbcr();
     return 0;
 }
 
@@ -285,4 +328,20 @@ void test_dct_inverse() {
     cv::Mat invDctBlock(8, 8, CV_32F);
     inverse_dct_block(invDctBlock, dctBlock, jpegElements);
     std::cout << invDctBlock << std::endl;
+}
+
+void test_ycbcr() {
+    std::string filename = "images/test_2.png";
+    cv::Mat image = CvImageUtils::load_image(filename);
+    CvImageUtils::display_image(image, "");
+
+    // cv::Mat ycbcrImage;
+    // cv::cvtColor(image, ycbcrImage, cv::COLOR_YCrCb2BGR);
+    cv::Mat ycbcrImage = bgr_to_ycbcr(image);
+    CvImageUtils::display_image(ycbcrImage, "");
+
+    // cv::Mat bgrImage;
+    // cv::cvtColor(ycbcrImage, bgrImage, cv::COLOR_BGR2YCrCb);
+    cv::Mat bgrImage = ycbcr_to_bgr(ycbcrImage);
+    CvImageUtils::display_image(bgrImage, "");
 }

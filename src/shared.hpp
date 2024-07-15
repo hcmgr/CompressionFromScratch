@@ -11,7 +11,7 @@ namespace CvImageUtils {
     /**
      * Load image from file into a cv::Mat structure
      */
-    cv::Mat loadImage(std::string filename);
+    cv::Mat load_image(std::string filename);
 
     /**
      * Displays the given cv::Mat image in a window of the given name
@@ -56,5 +56,16 @@ namespace PrintUtils {
         std::cout << "}\n";
     }
 };
+
+/**
+ * Collection of math utility functions
+ */
+namespace MathUtils {
+
+    /**
+     * Clamp 'value' into range ['min', 'max']
+     */
+    int clamp(int value, int min, int max);
+}
 
 #endif // SHARED_H

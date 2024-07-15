@@ -8,7 +8,7 @@
 
 Experiments::Experiments() {
     this->filename = "images/test_1.jpg";
-    this->image = CvImageUtils::loadImage(this->filename);
+    this->image = CvImageUtils::load_image(this->filename);
     this->N = this->image.rows, this->M = this->image.cols;
     CvImageUtils::print_image_stats(this->image);
 }

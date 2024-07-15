@@ -9,7 +9,7 @@ namespace CvImageUtils {
     /**
      * Load image from file into a cv::Mat structure
      */
-    cv::Mat loadImage(std::string filename) {
+    cv::Mat load_image(std::string filename) {
         cv::Mat image = cv::imread(filename, cv::IMREAD_COLOR);
 
         if (image.empty()) {
@@ -35,3 +35,13 @@ namespace CvImageUtils {
         std::cout << "NCHANNELS: " << image.channels() << std::endl;
     }
 };
+
+namespace MathUtils {
+
+    /**
+     * Clamp 'value' into range ['min', 'max']
+     */
+    int clamp(int value, int min, int max) {
+        return std::max(min, std::min(value, max));
+    }
+}
