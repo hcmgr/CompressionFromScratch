@@ -9,13 +9,13 @@
 #include "rle.hpp"
 #include "experiments.hpp"
 
-std::string getDiv2kFileName(int number) {
+std::string get_div2k_filename(int number) {
     std::ostringstream filename;
     filename << "DIV2K_train_HR/" << std::setfill('0') << std::setw(4) << number << ".png";
     return filename.str();
 }
 
-std::string getImagesFileName(int number) {
+std::string get_images_filename(int number) {
     std::ostringstream filename;
     filename << "images/" << "test_" << number << ".jpg";
     return filename.str();
@@ -49,6 +49,7 @@ cv::Mat bgr_to_ycbcr(cv::Mat bgrImage) {
             g = bgrPixels[1]; 
             r = bgrPixels[2];
 
+            // coefficient voodoo
             y = 0.299 * r + 0.587 * g + 0.114 * b;
             cb = 128 + 0.5*b - 0.168736*r - 0.331364*g;
             cr = 128 + 0.5*r - 0.418688*g - 0.081312*b;
@@ -76,6 +77,7 @@ cv::Mat ycbcr_to_bgr(cv::Mat ycbcrImage) {
             cr -= 128;
             cb -= 128;
 
+            // more coefficient voodoo
             r = y + 1.402*cr;
             g = y - 0.344136*cb - 0.714136*cr;
             b = y + 1.772*cb;
@@ -232,10 +234,10 @@ int jpeg(int imageNum, int quantMatrixIndex) {
     JpegElements jpegElements = JpegElements();
 
     // load image
-    std::string filename = getImagesFileName(imageNum);
-    // std::string filename = getDiv2kFileName(imageNum);
+    // std::string filename = get_images_filename(imageNum);
+    std::string filename = get_div2k_filename(imageNum);
     cv::Mat image = CvImageUtils::load_image(filename);
-    CvImageUtils::display_image(image, std::to_string(imageNum));
+    CvImageUtils::display_image(image, "Before (" + std::to_string(imageNum) + ")");
 
     // pad to make dimensions multiple of BLOCK_SIZE
     cv::Mat paddedImage = pad_for_jpeg(image, 8);
@@ -274,7 +276,7 @@ int jpeg(int imageNum, int quantMatrixIndex) {
     merge(invChannels, reconstructedImage);
 
     cv::Mat finalImage = ycbcr_to_bgr(reconstructedImage);
-    CvImageUtils::display_image(finalImage, std::to_string(imageNum) + std::to_string(quantMatrixIndex));
+    CvImageUtils::display_image(finalImage, "After (" + std::to_string(imageNum) + ")");
 
     cv::destroyAllWindows();
 
