@@ -12,6 +12,5 @@ Steps:
     - concatenate the blocks, separating each by an EOB char
 
 TODO:
-    - ensure dct and inv_dct are each others inverses
-    - apply jpeg to all blocks of an image
-        - see what sort of compression we can get
+    - each .cpp gives an object file
+    - see what compression we get

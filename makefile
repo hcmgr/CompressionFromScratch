@@ -6,9 +6,13 @@ OBJDIR = obj
 TARGET = jpeg
 
 SOURCES = $(wildcard $(SRCDIR)/*.cpp)
+OBJECTS = $(patsubst $(SRCDIR)/%.cpp, $(OBJDIR)/%.o, $(SOURCES))
 
-$(TARGET): $(SOURCES)
+$(TARGET): $(OBJECTS)
 	$(CXX) $(CXXFLAGS) -o $@ $^ $(OPENCV_FLAGS)
 
+$(OBJDIR)/%.o: $(SRCDIR)/%.cpp
+	$(CXX) $(CXXFLAGS) -c $< -o $@ $(OPENCV_FLAGS)
+
 clean:
-	rm -f $(TARGET) *.out
+	rm -f $(TARGET) $(OBJDIR)/*.o
