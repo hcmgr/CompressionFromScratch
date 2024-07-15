@@ -15,6 +15,12 @@ std::string getDiv2kFileName(int number) {
     return filename.str();
 }
 
+std::string getImagesFileName(int number) {
+    std::ostringstream filename;
+    filename << "images/" << "test_" << number << ".jpg";
+    return filename.str();
+}
+
 /**
  * Pads given image to ensure its dimensions are a multiple of 'blockSize'
  */
@@ -44,8 +50,8 @@ cv::Mat bgr_to_ycbcr(cv::Mat bgrImage) {
             r = bgrPixels[2];
 
             y = 0.299 * r + 0.587 * g + 0.114 * b;
-            cb = 128 + 0.5*b - 0.1687*r - 0.3314*g;
-            cr = 128 + 0.5*r - 0.4625*g - 0.0813*b;
+            cb = 128 + 0.5*b - 0.168736*r - 0.331364*g;
+            cr = 128 + 0.5*r - 0.418688*g - 0.081312*b;
 
             cv::Vec3b &ycbcrPixels = ycbcrImage.at<cv::Vec3b>(i, j);
             ycbcrPixels[0] = MathUtils::clamp(round(y), 0, 255); // Y
@@ -71,7 +77,7 @@ cv::Mat ycbcr_to_bgr(cv::Mat ycbcrImage) {
             cb -= 128;
 
             r = y + 1.402*cr;
-            g = y - 0.344*cb - 0.714*cr;
+            g = y - 0.344136*cb - 0.714136*cr;
             b = y + 1.772*cb;
 
             cv::Vec3b &bgrPixels = bgrImage.at<cv::Vec3b>(i, j);
@@ -226,8 +232,8 @@ int jpeg(int imageNum, int quantMatrixIndex) {
     JpegElements jpegElements = JpegElements();
 
     // load image
-    // std::string filename = "images/test_2.png";
-    std::string filename = getDiv2kFileName(imageNum);
+    std::string filename = getImagesFileName(imageNum);
+    // std::string filename = getDiv2kFileName(imageNum);
     cv::Mat image = CvImageUtils::load_image(filename);
     CvImageUtils::display_image(image, std::to_string(imageNum));
 

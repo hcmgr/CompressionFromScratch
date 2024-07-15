@@ -12,5 +12,5 @@ Steps:
     - concatenate the blocks, separating each by an EOB char
 
 TODO:
-    - each .cpp gives an object file
+    - fix blue tint
     - see what compression we get

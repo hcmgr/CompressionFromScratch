@@ -23,7 +23,7 @@ namespace CvImageUtils {
      */
     void display_image(cv::Mat& image, std::string name) {
         cv::namedWindow(name, cv::WINDOW_NORMAL);
-        cv::resizeWindow(name, image.cols / 2, image.rows / 2);
+        // cv::resizeWindow(name, image.cols / 2, image.rows / 2);
         cv::imshow(name, image);
         cv::waitKey(0);
     }
