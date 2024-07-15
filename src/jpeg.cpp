@@ -134,8 +134,8 @@ void inverse_dct_block(cv::Mat invBlock, cv::Mat dctBlock, JpegElements &jpegEle
 /**
  * Performs quantisation step on the given 8x8 block
  */
-void quantise_block(cv::Mat quantBlock, cv::Mat dctBlock, JpegElements &jpegElements) {
-    cv::Mat quantisationMatrix = jpegElements.get_quantisation_matrix();
+void quantise_block(cv::Mat quantBlock, cv::Mat dctBlock, int i, JpegElements &jpegElements) {
+    cv::Mat quantisationMatrix = jpegElements.get_quantisation_matrix(i);
     for (int r = 0; r < BLOCK_SIZE; r++) {
         for (int c = 0; c < BLOCK_SIZE; c++) {
             float currIntensity = dctBlock.at<float>(r, c);
@@ -177,7 +177,7 @@ std::vector<int> block_to_zig_zag(cv::Mat block, JpegElements &jpegElements) {
  *  - zig-zag
  *  - entropy encode
  */
-cv::Mat jpeg_block(cv::Mat block, JpegElements &jpegElements) {
+cv::Mat jpeg_block(cv::Mat block, int quantMatrixIndex, JpegElements &jpegElements) {
     // std::cout << "Init" << std::endl << block << std::endl << std::endl;
 
     // pre-process
@@ -192,7 +192,7 @@ cv::Mat jpeg_block(cv::Mat block, JpegElements &jpegElements) {
 
     // quantise block
     cv::Mat quantBlock(8, 8, CV_32F);
-    quantise_block(quantBlock, dctBlock, jpegElements);
+    quantise_block(quantBlock, dctBlock, quantMatrixIndex, jpegElements);
     // std::cout << "Quantised" << std::endl << quantBlock << std::endl << std::endl;
 
     // // convert to flattened uchar array in zig-zag order
@@ -222,15 +222,14 @@ cv::Mat jpeg_block(cv::Mat block, JpegElements &jpegElements) {
     return finalBlock;
 }
 
-int jpeg(int num) {
+int jpeg(int imageNum, int quantMatrixIndex) {
     JpegElements jpegElements = JpegElements();
 
     // load image
     // std::string filename = "images/test_2.png";
-    std::string filename = getDiv2kFileName(num);
+    std::string filename = getDiv2kFileName(imageNum);
     cv::Mat image = CvImageUtils::load_image(filename);
-    CvImageUtils::display_image(image, std::to_string(num));
-    CvImageUtils::print_image_stats(image);
+    CvImageUtils::display_image(image, std::to_string(imageNum));
 
     // pad to make dimensions multiple of BLOCK_SIZE
     cv::Mat paddedImage = pad_for_jpeg(image, 8);
@@ -255,7 +254,7 @@ int jpeg(int num) {
             for (int c = 0; c < N; c+=8) {
                 cv::Rect blockRect(c, r, 8, 8);
                 block = currChannel(blockRect).clone();
-                invDctBlock = jpeg_block(block, jpegElements);
+                invDctBlock = jpeg_block(block, quantMatrixIndex, jpegElements);
                 // std::cout << block << std::endl;
                 // std::cout << invDctBlock << std::endl << std::endl;
                 invDctBlock.copyTo(invChannel(blockRect));
@@ -269,7 +268,7 @@ int jpeg(int num) {
     merge(invChannels, reconstructedImage);
 
     cv::Mat finalImage = ycbcr_to_bgr(reconstructedImage);
-    CvImageUtils::display_image(finalImage, std::to_string(num));
+    CvImageUtils::display_image(finalImage, std::to_string(imageNum) + std::to_string(quantMatrixIndex));
 
     cv::destroyAllWindows();
 
@@ -284,11 +283,12 @@ void test_dct_inverse();
 void test_ycbcr();
 
 int main() {
-    for (int i = 1; i < 10; i++) {
-        jpeg(i);
+    int qmi = 3;
+    int imageNum;
+    for (imageNum = 1; imageNum < 10; imageNum++) {
+        jpeg(imageNum, qmi);
     }
     
-    // test_ycbcr();
     return 0;
 }
 

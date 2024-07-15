@@ -11,10 +11,11 @@ JpegElements::~JpegElements() {
 }
 
 /**
- * Returns quant. matrix as a cv::Mat
+ * Returns ith quantisation matrix (see pre_computed.hpp)
+ * as a cv::Mat object
  */
-cv::Mat JpegElements::get_quantisation_matrix() {
-    return cv::Mat(BLOCK_SIZE, BLOCK_SIZE, CV_32F, QUANTISATION_MATRIX);
+cv::Mat JpegElements::get_quantisation_matrix(int i) {
+    return cv::Mat(BLOCK_SIZE, BLOCK_SIZE, CV_32F, QUANTISATION_MATRIX[i]);
 }
 
 /**
