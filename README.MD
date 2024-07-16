@@ -1,8 +1,8 @@
 # JPEG Compression from Scratch
 
-## 🚧 Work in Progress 🚧
-
 JPEG compression implemented in C++, using opencv4.
+
+## 🚧 Work in Progress 🚧
 
 ## Installation
 
