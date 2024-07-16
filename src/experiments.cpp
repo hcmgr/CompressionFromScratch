@@ -6,6 +6,8 @@
 #include "shared.hpp"
 #include "experiments.hpp"
 
+#define DISPLAY_SIZE 1000
+
 Experiments::Experiments() {
     this->filename = "images/test_1.jpg";
     this->image = CvImageUtils::load_image(this->filename);
@@ -42,6 +44,7 @@ void Experiments::blacken_pixels() {
     }
     
     CvImageUtils::display_image(workingImage, "After");
+    cv::destroyAllWindows();
 }
 
 /**
@@ -82,7 +85,8 @@ void Experiments::remove_pixels() {
     cv::Mat resizedImage;
     cv::resize(newImage, resizedImage, cv::Size(this->image.cols, this->image.rows));
     CvImageUtils::display_image(resizedImage, "After");
-    CvImageUtils::print_image_stats(resizedImage);
+
+    cv::destroyAllWindows();
 }
 
 /**
@@ -118,6 +122,8 @@ void Experiments::avg_pool() {
     cv::Mat resizedImage;
     cv::resize(pooledImage, resizedImage, cv::Size(this->image.cols, this->image.rows));
     CvImageUtils::display_image(resizedImage, "After");
+
+    cv::destroyAllWindows();
 }
 
 /**
@@ -152,4 +158,6 @@ void Experiments::max_pool() {
     cv::Mat resizedImage;
     cv::resize(pooledImage, resizedImage, cv::Size(this->image.cols, this->image.rows));
     CvImageUtils::display_image(resizedImage, "After");
+
+    cv::destroyAllWindows();
 }

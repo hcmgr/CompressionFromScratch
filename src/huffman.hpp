@@ -47,7 +47,7 @@ public:
     /**
      * Huffman encodes the given byte array
      */
-    std::vector<uchar> encode_data(std::vector<int> data);
+    std::vector<uchar> encode_data(std::vector<int> data, bool debug);
 
     std::map<int, std::string> get_encodings();
 };

@@ -12,5 +12,5 @@ Steps:
     - concatenate the blocks, separating each by an EOB char
 
 TODO:
-    - fix blue tint
-    - see what compression we get
+    - re-construct from huffman-enocded block,
+      not just image itself

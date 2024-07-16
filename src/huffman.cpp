@@ -81,7 +81,7 @@ void Huffman::build_encodings_map(HuffmanNode *root, std::string code) {
 /**
  * Huffman encodes the given byte array
  */
-std::vector<uchar> Huffman::encode_data(std::vector<int> data) {
+std::vector<uchar> Huffman::encode_data(std::vector<int> data, bool debug) {
     // rle encode the data
     std::vector<int> rle_data = Rle::rle_encode(data);
 
@@ -95,11 +95,6 @@ std::vector<uchar> Huffman::encode_data(std::vector<int> data) {
         binary_string += this->encodings[byte];
     }
 
-    std::cout << std::endl << "Encodings map" << std::endl;
-    PrintUtils::print_map(encodings);
-    std::cout << std::endl << "Full binary string: (" << binary_string.size() << ")" << std::endl;
-    std::cout << binary_string << std::endl;
-
     // convert new binary string into byte array
     std::vector<uchar> byte_array;
     std::string byte_string;
@@ -108,6 +103,15 @@ std::vector<uchar> Huffman::encode_data(std::vector<int> data) {
         byte_string = binary_string.substr(i, 8);
         val = std::stoi(byte_string, nullptr, 2);
         byte_array.push_back(val);
+    }
+
+    if (debug) {
+        std::cout << std::endl << "Data" << std::endl;
+        PrintUtils::print_vector(data);
+        std::cout << std::endl << "Encodings map" << std::endl;
+        PrintUtils::print_map(encodings);
+        std::cout << std::endl << "Full binary string: (" << binary_string.size() << ")" << std::endl;
+        std::cout << binary_string << std::endl;
     }
 
     return byte_array;
