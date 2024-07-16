@@ -1,8 +1,8 @@
 # JPEG Compression from Scratch
 
-JPEG compression implemented in C++, using opencv4.
+## 🚧 Work in Progress 🚧
 
-**NOTE: work in progress**
+JPEG compression implemented in C++, using opencv4.
 
 ## Installation
 
@@ -13,5 +13,3 @@ JPEG compression implemented in C++, using opencv4.
    git clone https://github.com/hcmgr/CompressionFromScratch.git
    cd CompressionFromScratch
    make
-
-## Usage ##
