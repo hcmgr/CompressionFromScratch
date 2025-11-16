@@ -8,9 +8,9 @@
 
 #define DISPLAY_SIZE 1000
 
-Experiments::Experiments() {
-    this->filename = "images/test_1.jpg";
-    this->image = CvImageUtils::loadImage(this->filename);
+Experiments::Experiments(std::string imageFilePath) {
+    this->imageFilePath = imageFilePath;
+    this->image = CvImageUtils::loadImage(imageFilePath);
     this->N = this->image.rows, this->M = this->image.cols;
     CvImageUtils::printImageStats(this->image);
 }

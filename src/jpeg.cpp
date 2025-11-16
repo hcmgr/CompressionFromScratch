@@ -9,9 +9,9 @@
 #include "rle.hpp"
 #include "experiments.hpp"
 
-/**
- * Pads given image to ensure its dimensions are a multiple of 'blockSize'
- */
+//
+// Pads given image to ensure its dimensions are a multiple of 'blockSize'
+//
 cv::Mat padForJpeg(cv::Mat image, int blockSize) {
     int padRows = blockSize - (image.rows % blockSize);
     int padCols = blockSize - (image.cols % blockSize);
@@ -23,9 +23,9 @@ cv::Mat padForJpeg(cv::Mat image, int blockSize) {
     return paddedImage;
 }
 
-/**
- * Convert image from [B,G,R] to [Y,Cb,Cr] format
- */
+//
+// Convert image from [B,G,R] to [Y,Cb,Cr] format
+//
 cv::Mat bgrToYcbcr(cv::Mat bgrImage) {
     cv::Mat ycbcrImage(bgrImage.rows, bgrImage.cols, CV_8UC3, cv::Scalar(0, 0, 0));
     float b, g, r;
@@ -51,6 +51,9 @@ cv::Mat bgrToYcbcr(cv::Mat bgrImage) {
     return ycbcrImage;
 }
 
+//
+// Convert image from [Y, Cb, Cr] to [B,G,R] format
+//
 cv::Mat ycbcrToBgr(cv::Mat ycbcrImage) {
     cv::Mat bgrImage(ycbcrImage.rows, ycbcrImage.cols, CV_8UC3, cv::Scalar(0, 0, 0));
     float y, cb, cr;
@@ -79,9 +82,9 @@ cv::Mat ycbcrToBgr(cv::Mat ycbcrImage) {
     return bgrImage;
 }
 
-/**
- * Performs DCT step on the given 8x8 block
- */
+//
+// Performs DCT step on the given 8x8 block
+//
 void dctBlock(cv::Mat dctBlock, cv::Mat block, JpegElements &jpegElements) {
     float temp;
     int N = block.rows;
@@ -102,9 +105,9 @@ void dctBlock(cv::Mat dctBlock, cv::Mat block, JpegElements &jpegElements) {
     }
 }
 
-/**
- * Performs the inverse DCT step on the given 8x8 block
- */
+//
+// Performs the inverse DCT step on the given 8x8 block
+//
 void inverseDctBlock(cv::Mat invBlock, cv::Mat dctBlock, JpegElements &jpegElements) {
     float temp;
     int N = dctBlock.rows;
@@ -127,9 +130,9 @@ void inverseDctBlock(cv::Mat invBlock, cv::Mat dctBlock, JpegElements &jpegEleme
     }
 }
 
-/**
- * Performs quantisation step on the given 8x8 block
- */
+//
+// Performs quantisation step on the given 8x8 block
+//
 void quantiseBlock(cv::Mat quantBlock, cv::Mat dctBlock, int i, JpegElements &jpegElements) {
     cv::Mat quantisationMatrix = jpegElements.getQuantisationMatrix(i);
     for (int r = 0; r < BLOCK_SIZE; r++) {
@@ -140,9 +143,9 @@ void quantiseBlock(cv::Mat quantBlock, cv::Mat dctBlock, int i, JpegElements &jp
     }
 }
 
-/**
- * Convert 8x8 block into zig-zag ordered 64-d array
- */
+//
+// Convert 8x8 block into zig-zag ordered 64-d array
+//
 std::vector<int> blockToZigZag(cv::Mat block, JpegElements &jpegElements) {
     std::vector<int> res;
 
@@ -165,9 +168,9 @@ std::vector<int> blockToZigZag(cv::Mat block, JpegElements &jpegElements) {
     return res;
 }
 
-/**
- * For given block, apply jpeg, then reverse steps to produce compressed block
- */
+//
+// For given block, apply jpeg, then reverse steps to produce compressed block
+//
 cv::Mat jpegBlockForwardReverse(cv::Mat block, int quantMatrixIndex, JpegElements &jpegElements, bool debug) {
     // pre-process
     cv::Mat floatBlock;
@@ -199,9 +202,9 @@ cv::Mat jpegBlockForwardReverse(cv::Mat block, int quantMatrixIndex, JpegElement
     return finalBlock;
 }
 
-/**
- * Apply jpeg to image, then reverse it and re-construct compressed form
- */
+//
+// Apply jpeg to image, then reverse it and re-construct compressed form.
+//
 int jpegForwardReverse(std::string imageFilePath, int quantMatrixIndex) {
     JpegElements jpegElements = JpegElements();
 
@@ -300,45 +303,4 @@ int main(int argc, char* argv[]) {
     CliArgs args = parseCliArgs(argc, argv);
     jpegForwardReverse(args.imagePath, args.qmi);
     return 0;
-}
-
-////////////////////////////////////////
-// Experiments / tests
-////////////////////////////////////////
-
-void test_ycbcr() {
-    std::string filename = "images/test_1.jpg";
-    cv::Mat image = CvImageUtils::loadImage(filename);
-    CvImageUtils::displayImage(image, "thing1");
-
-    cv::Mat ycbcrImage = bgrToYcbcr(image);
-    CvImageUtils::displayImage(ycbcrImage, "thing2");
-
-    cv::Mat bgrImage = ycbcrToBgr(ycbcrImage);
-    CvImageUtils::displayImage(bgrImage, "thing3");
-}
-
-void test_dct() {
-    JpegElements jpegElements = JpegElements();
-
-    // initialise random block
-    cv::Mat block(8, 8, CV_32F);
-    cv::randu(block, 0, 256);
-    std::cout << block << "\n" << "\n";
-
-    // apply dct
-    cv::Mat dctResultBlock(8, 8, CV_32F);
-    dctBlock(dctResultBlock, block, jpegElements);
-    std::cout << dctResultBlock << "\n\n";
-
-    // inverse dct
-    cv::Mat invDctBlock(8, 8, CV_32F);
-    inverseDctBlock(invDctBlock, dctResultBlock, jpegElements);
-    std::cout << invDctBlock << "\n";
-}
-
-void test_huffman_tree_build() {
-    HuffmanEncoder h;
-    std::vector<int> data = {1,1,2,2,3,3,4,4};
-    std::vector<uchar> enc_data = h.encode(data, true);
 }
