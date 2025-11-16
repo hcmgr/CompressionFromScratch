@@ -1,3 +1,3 @@
 cd build
 make
-./myjpeg ../images/test_4.jpg --qmi=3
+./myjpeg ../images/test_4.jpg --qmi=1

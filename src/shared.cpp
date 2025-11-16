@@ -19,6 +19,24 @@ namespace CvImageUtils {
     }
 
     //
+    // Save the given cv::Mat image to the specified file path.
+    // Returns true on success, false on failure.
+    //
+    bool saveImage(const cv::Mat& image, const std::string& path) {
+        if (image.empty()) {
+            std::cout << "saveImage(): Cannot save an empty image to: " << path << std::endl;
+            return false;
+        }
+
+        bool ok = cv::imwrite(path, image);
+        if (!ok) {
+            std::cout << "saveImage(): Failed to write image to: " << path << std::endl;
+        }
+
+        return ok;
+    }
+
+    //
     // Displays the given cv::Mat image in a window of the given name
     //
     void displayImage(cv::Mat& image, std::string name) {

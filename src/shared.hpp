@@ -17,6 +17,12 @@ namespace CvImageUtils {
     cv::Mat loadImage(std::string filename);
 
     //
+    // Save the given cv::Mat image to the specified file path.
+    // Returns true on success, false on failure.
+    //
+    bool saveImage(const cv::Mat& image, const std::string& path);
+
+    //
     // Displays the given cv::Mat image in a window of the given name
     //
     void displayImage(cv::Mat& image, std::string name);
