@@ -2,31 +2,6 @@
 
 JPEG compression implemented in C++, using opencv4.
 
-## Install
-NOTE - install steps only given for MacOS and Linux.
-<br><br>
-First, install opencv.
-<br><br>
-On mac, run:
-```bash
-brew install opencv
-```
-
-On linux, run:
-```bash
-sudo apt install libopencv-dev
-```
-Now, simply run our `install.sh` script:
-```bash
-chmod +x scripts/install.sh
-./scripts/install.sh
-```
-At this point, `build/` should have a `myjpeg` binary. To install globally (i.e. in /usr/local/bin), run:
-```bash
-cd build/
-sudo make install 
-```
-
 ## Usage
 ```bash
 myjpeg {image_file_path} [--qmi=N]
@@ -63,4 +38,27 @@ This yields a much more noticeable compression:
 ![After](assets/example_after_qmi1.jpg)
 <br><br>
 
+## Install
+NOTE - install steps only given for MacOS and Linux.
+<br><br>
+First, install opencv.
+<br><br>
+On mac, run:
+```bash
+brew install opencv
+```
 
+On linux, run:
+```bash
+sudo apt install libopencv-dev
+```
+Now, simply run our `install.sh` script:
+```bash
+chmod +x scripts/install.sh
+./scripts/install.sh
+```
+At this point, `build/` should have a `myjpeg` binary. To install globally (i.e. in /usr/local/bin), run:
+```bash
+cd build/
+sudo make install 
+```
