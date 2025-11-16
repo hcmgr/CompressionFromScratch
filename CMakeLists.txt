@@ -11,7 +11,7 @@ find_package(OpenCV REQUIRED)
 
 file(GLOB SOURCES "src/*.cpp")
 
-add_executable(jpeg ${SOURCES})
-target_include_directories(jpeg PRIVATE ${OpenCV_INCLUDE_DIRS})
-target_link_libraries(jpeg PRIVATE ${OpenCV_LIBS})
-install(TARGETS jpeg DESTINATION bin)
+add_executable(myjpeg ${SOURCES})
+target_include_directories(myjpeg PRIVATE ${OpenCV_INCLUDE_DIRS})
+target_link_libraries(myjpeg PRIVATE ${OpenCV_LIBS})
+install(TARGETS myjpeg DESTINATION bin)

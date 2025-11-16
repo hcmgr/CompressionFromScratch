@@ -15,9 +15,9 @@ Experiments::Experiments(std::string imageFilePath) {
     CvImageUtils::printImageStats(this->image);
 }
 
-/**
- * Randomly make fixed percentage of pixels black
- */
+//
+// Randomly make fixed percentage of pixels black
+//
 void Experiments::blacken_pixels() {
     CvImageUtils::displayImage(this->image, "Before");
 
@@ -47,10 +47,10 @@ void Experiments::blacken_pixels() {
     cv::destroyAllWindows();
 }
 
-/**
- * Systematically remove fixed percentage of pixels from each row,
- * then re-construct image
- */
+//
+// Systematically remove fixed percentage of pixels from each row,
+// then re-construct image.
+//
 void Experiments::remove_pixels() {
     CvImageUtils::displayImage(this->image, "Before");
 
@@ -89,9 +89,9 @@ void Experiments::remove_pixels() {
     cv::destroyAllWindows();
 }
 
-/**
- * Avg pooling
- */
+//
+// Avg pooling
+//
 void Experiments::avg_pool() {
     CvImageUtils::displayImage(this->image, "Before");
 
@@ -126,9 +126,9 @@ void Experiments::avg_pool() {
     cv::destroyAllWindows();
 }
 
-/**
- * Max pooling
- */
+//
+// Max pooling
+//
 void Experiments::max_pool() {
     CvImageUtils::displayImage(this->image, "Before");
 

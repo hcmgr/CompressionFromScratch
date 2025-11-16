@@ -7,7 +7,6 @@
 #include "huffman.hpp"
 #include "shared.hpp"
 #include "rle.hpp"
-#include "experiments.hpp"
 
 //
 // Pads given image to ensure its dimensions are a multiple of 'blockSize'
@@ -267,8 +266,8 @@ struct CliArgs {
 
 std::string usage() {
     std::ostringstream oss;
-    oss << "Usage: ./jpeg {image_path} [--qmi=N]" << "\n\n";
-    oss << "Note - valid N values: {0,1,2,3,4} (increasing orders of quantisation)" << "\n";
+    oss << "Usage: myjpeg {image_file_path} [--qmi=N]" << "\n\n";
+    oss << "Note - valid N values: {0,1,2,3} (increasing orders of quantisation)" << "\n";
     return oss.str();
 }
 
@@ -290,10 +289,11 @@ CliArgs parseCliArgs(int argc, char* argv[]) {
             std::cout << usage();
             std::exit(1);
         }
-        if (qmi < 0 || qmi > NUM_QUANT_MATRICES) {
+        if (qmi < 0 || qmi >= NUM_QUANT_MATRICES) {
             std::cout << usage();
             std::exit(1);
         }
+        args.qmi = qmi;
     }
 
     return args;
