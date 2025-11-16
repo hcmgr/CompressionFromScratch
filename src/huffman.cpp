@@ -25,12 +25,11 @@ HuffmanNode::HuffmanNode(HuffmanNode *left, HuffmanNode *right) { // non-leaf
     this->right = right;
 }
 
-/**
- * Builds the huffman encoding tree
- * 
- * NOTE: expects data to be run-length-encoded
- */
-void Huffman::build_huffman_tree(std::vector<int> rle_data) {
+//
+// Builds up encoding tree from given byte array. Expects `data` to be rle-encoding,
+// see rle.hpp.
+//
+void HuffmanEncoder::buildEncodingTree(std::vector<int> rle_data) {
     // build up frequency map
     std::map<int, int> freqCount;
     int n = rle_data.size();
@@ -62,10 +61,10 @@ void Huffman::build_huffman_tree(std::vector<int> rle_data) {
     this->root = pq.top().second;
 }
 
-/**
- * Traverses huffman tree to find encodings for each leaf
- */
-void Huffman::build_encodings_map(HuffmanNode *root, std::string code) {
+//
+// Traverses huffman encoding tree to populate the encodings map with encodings of each leaf
+//
+void HuffmanEncoder::buildEncodingsMap(HuffmanNode *root, std::string code) {
     if (!root) {
         return;
     }
@@ -74,20 +73,20 @@ void Huffman::build_encodings_map(HuffmanNode *root, std::string code) {
         this->encodings[root->val] = code;
     }
 
-    build_encodings_map(root->left, code + "0");
-    build_encodings_map(root->right, code + "1");
+    buildEncodingsMap(root->left, code + "0");
+    buildEncodingsMap(root->right, code + "1");
 }
 
-/**
- * Huffman encodes the given byte array
- */
-std::vector<uchar> Huffman::encode_data(std::vector<int> data, bool debug) {
+//
+// Huffman encodes given byte array
+//
+std::vector<uchar> HuffmanEncoder::encode(std::vector<int> data, bool debug) {
     // rle encode the data
-    std::vector<int> rle_data = Rle::rle_encode(data);
+    std::vector<int> rle_data = Rle::rleEncode(data);
 
     // calculate encodings
-    build_huffman_tree(rle_data);
-    build_encodings_map(this->root, "");
+    buildEncodingTree(rle_data);
+    buildEncodingsMap(this->root, "");
 
     // convert byte array to its encoded binary string
     std::string binary_string;
@@ -107,9 +106,9 @@ std::vector<uchar> Huffman::encode_data(std::vector<int> data, bool debug) {
 
     if (debug) {
         std::cout << std::endl << "Data" << std::endl;
-        PrintUtils::print_vector(data);
+        PrintUtils::printVector(data);
         std::cout << std::endl << "Encodings map" << std::endl;
-        PrintUtils::print_map(encodings);
+        PrintUtils::printMap(encodings);
         std::cout << std::endl << "Full binary string: (" << binary_string.size() << ")" << std::endl;
         std::cout << binary_string << std::endl;
     }
@@ -117,9 +116,6 @@ std::vector<uchar> Huffman::encode_data(std::vector<int> data, bool debug) {
     return byte_array;
 }
 
-std::map<int, std::string> Huffman::get_encodings() {
+std::map<int, std::string> HuffmanEncoder::getEncodings() {
     return this->encodings;
 }
-
-///// TESTING /////
-

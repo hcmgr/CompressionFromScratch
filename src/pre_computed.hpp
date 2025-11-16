@@ -1,23 +1,26 @@
-#ifndef PRE_COMPUTED_H
-#define PRE_COMPUTED_H
+#pragma once
 
 #include <opencv2/opencv.hpp>
+
 #define BLOCK_SIZE 8
 #define NUM_QUANT_MATRICES 5
 
-/**
- * Contains all pre-computed elements of JPEG compression
- */
+//
+// Holds pre-computed elements of JPEG compression, namely:
+//      - quantisation matrix
+//      - dct cosines
+//      - dct coefficients
+//      - zig-zag ordering of indices
+//
 class JpegElements {
 public:
-    /**
-     * JPEG quantisation matrices.
-     * 
-     * Listed from least aggressive to most aggressive.
-     */
+    //
+    // JPEG quantisation matrices.
+    // Listed from least aggresive to most aggressive.
+    //
     float QUANTISATION_MATRIX[NUM_QUANT_MATRICES][BLOCK_SIZE][BLOCK_SIZE] = {
         // no quantisation
-        {
+        { 
             {1, 1, 1, 1, 1, 1, 1, 1},
             {1, 1, 1, 1, 1, 1, 1, 1},
             {1, 1, 1, 1, 1, 1, 1, 1},
@@ -74,41 +77,38 @@ public:
         }
     };
 
-    /**
-     * Stores pre-computed cosines and coefficients for DCT calculations
-     */
+    //
+    // Pre-computed cosines and coefficients of DCT calculations
+    //
     float dct_cosines[BLOCK_SIZE][BLOCK_SIZE];
     float dct_coefs[BLOCK_SIZE][BLOCK_SIZE];
 
-    JpegElements(); // constructor
+    JpegElements();
+    ~JpegElements() = default;
 
-    ~JpegElements(); // destructor
-
-    /**
-     * Stores zig-zag ordering of block indices
-     */
+    //
+    // Zip-zag ordering of block indices
+    //
     std::vector<std::pair<int, int>> zig_zag_indices;
 
-    /**
-     * Returns ith quantisation matrix (see pre_computed.hpp)
-     * as a cv::Mat object
-     */
-    cv::Mat get_quantisation_matrix(int i);
+    //
+    // Returns the ith quantisation matrix (see pre_computed.hpp)
+    // as a cv::Mat object
+    //
+    cv::Mat getQuantisationMatrix(int i);
 
-    /**
-     * Populates pre-computed DCT cosines matrix
-     */
-    void populate_dct_cosines_matrix();
+    //
+    // Populates the pre-computed DCT cosines matrix
+    //
+    void populateDctCosinesMatrix();
 
-    /**
-     * Populates pre-computed DCT coefficients matrix
-     */
-    void populate_dct_coefs_matrix();
+    //
+    // Populates the pre-computed DCT coefficients matrix
+    //
+    void populateDctCoefsMatrix();
 
-    /**
-     * Populates pre-computed zig-zag indices
-     */
-    void populate_zig_zag_indices();
+    //
+    // Populates the pre-computed zig-zag indices
+    //
+    void populateZigZagIndices();
 };
-
-#endif // PRE_COMPUTED_H

@@ -10,16 +10,16 @@
 
 Experiments::Experiments() {
     this->filename = "images/test_1.jpg";
-    this->image = CvImageUtils::load_image(this->filename);
+    this->image = CvImageUtils::loadImage(this->filename);
     this->N = this->image.rows, this->M = this->image.cols;
-    CvImageUtils::print_image_stats(this->image);
+    CvImageUtils::printImageStats(this->image);
 }
 
 /**
  * Randomly make fixed percentage of pixels black
  */
 void Experiments::blacken_pixels() {
-    CvImageUtils::display_image(this->image, "Before");
+    CvImageUtils::displayImage(this->image, "Before");
 
     int perc = 70;
     cv::Mat workingImage = this->image.clone();
@@ -43,7 +43,7 @@ void Experiments::blacken_pixels() {
         workingImage.at<cv::Vec3b>(r, c) = cv::Vec3b(0, 0, 0);
     }
     
-    CvImageUtils::display_image(workingImage, "After");
+    CvImageUtils::displayImage(workingImage, "After");
     cv::destroyAllWindows();
 }
 
@@ -52,7 +52,7 @@ void Experiments::blacken_pixels() {
  * then re-construct image
  */
 void Experiments::remove_pixels() {
-    CvImageUtils::display_image(this->image, "Before");
+    CvImageUtils::displayImage(this->image, "Before");
 
     int everyN = 10; // everyN pixels, include one
     int count;
@@ -80,11 +80,11 @@ void Experiments::remove_pixels() {
         }
     }
 
-    CvImageUtils::print_image_stats(newImage);
+    CvImageUtils::printImageStats(newImage);
 
     cv::Mat resizedImage;
     cv::resize(newImage, resizedImage, cv::Size(this->image.cols, this->image.rows));
-    CvImageUtils::display_image(resizedImage, "After");
+    CvImageUtils::displayImage(resizedImage, "After");
 
     cv::destroyAllWindows();
 }
@@ -93,7 +93,7 @@ void Experiments::remove_pixels() {
  * Avg pooling
  */
 void Experiments::avg_pool() {
-    CvImageUtils::display_image(this->image, "Before");
+    CvImageUtils::displayImage(this->image, "Before");
 
     int kern_size = 3;
     int newRows = this->image.rows / kern_size;
@@ -121,7 +121,7 @@ void Experiments::avg_pool() {
 
     cv::Mat resizedImage;
     cv::resize(pooledImage, resizedImage, cv::Size(this->image.cols, this->image.rows));
-    CvImageUtils::display_image(resizedImage, "After");
+    CvImageUtils::displayImage(resizedImage, "After");
 
     cv::destroyAllWindows();
 }
@@ -130,7 +130,7 @@ void Experiments::avg_pool() {
  * Max pooling
  */
 void Experiments::max_pool() {
-    CvImageUtils::display_image(this->image, "Before");
+    CvImageUtils::displayImage(this->image, "Before");
 
     int kern_size = 3;
     int newRows = this->image.rows / kern_size;
@@ -157,7 +157,7 @@ void Experiments::max_pool() {
 
     cv::Mat resizedImage;
     cv::resize(pooledImage, resizedImage, cv::Size(this->image.cols, this->image.rows));
-    CvImageUtils::display_image(resizedImage, "After");
+    CvImageUtils::displayImage(resizedImage, "After");
 
     cv::destroyAllWindows();
 }

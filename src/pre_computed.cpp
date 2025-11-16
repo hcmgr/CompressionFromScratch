@@ -1,27 +1,23 @@
 #include "pre_computed.hpp"
 
 JpegElements::JpegElements() {
-    populate_dct_coefs_matrix();
-    populate_dct_cosines_matrix();
-    populate_zig_zag_indices();
+    populateDctCoefsMatrix();
+    populateDctCosinesMatrix();
+    populateZigZagIndices();
 }
 
-JpegElements::~JpegElements() {
-
-}
-
-/**
- * Returns ith quantisation matrix (see pre_computed.hpp)
- * as a cv::Mat object
- */
-cv::Mat JpegElements::get_quantisation_matrix(int i) {
+//
+// Returns the ith quantisation matrix (see pre_computed.hpp)
+// as a cv::Mat object
+//
+cv::Mat JpegElements::getQuantisationMatrix(int i) {
     return cv::Mat(BLOCK_SIZE, BLOCK_SIZE, CV_32F, QUANTISATION_MATRIX[i]);
 }
 
-/**
- * Populates pre-computed DCT cosines matrix
- */
-void JpegElements::populate_dct_cosines_matrix() {
+//
+// Populates the pre-computed DCT cosines matrix
+//
+void JpegElements::populateDctCosinesMatrix() {
     double temp;
     for (int i = 0; i < BLOCK_SIZE; i++) {
         for (int j = 0; j < BLOCK_SIZE; j++) {
@@ -31,10 +27,10 @@ void JpegElements::populate_dct_cosines_matrix() {
     }
 }
 
-/**
- * Populates pre-computed DCT coefficients matrix
- */
-void JpegElements::populate_dct_coefs_matrix() {
+//
+// Populates the pre-computed DCT coefficients matrix
+//
+void JpegElements::populateDctCoefsMatrix() {
     float temp;
     for (int i = 0; i < BLOCK_SIZE; i++) {
         for (int j = 0; j < BLOCK_SIZE; j++) {
@@ -50,10 +46,10 @@ void JpegElements::populate_dct_coefs_matrix() {
     }
 }
 
-/**
- * Populates pre-computed zig-zag indices
- */
-void JpegElements::populate_zig_zag_indices() {
+//
+// Populates the pre-computed zig-zag indices
+//
+void JpegElements::populateZigZagIndices() {
     zig_zag_indices.push_back(std::make_pair(0, 0));
 
     int m = 8, n = 8;

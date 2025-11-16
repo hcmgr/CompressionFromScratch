@@ -1,12 +1,14 @@
+#pragma once
+
 #include <vector>
 
-/**
- * Collection of run-length encoding/decoding algorithms
- */
+//
+// Run-length encoding/decoding algorithms
+//
 namespace Rle {
 
-    /**
-     * Run-length encode given array
-     */
-    std::vector<int> rle_encode(std::vector<int> arr);
+    //
+    // Run-length encode given byte array
+    //
+    std::vector<int> rleEncode(std::vector<int> arr);
 }

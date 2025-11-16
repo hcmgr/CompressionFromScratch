@@ -1,3 +1,5 @@
+#pragma once
+
 #include <opencv2/opencv.hpp>
 #include <iostream>
 
@@ -7,6 +9,11 @@
  * Collection of self-contained experiments
  */
 class Experiments {
+private:
+    std::string filename;
+    cv::Mat image; 
+    int M, N;
+
 public:
     Experiments(); 
 
@@ -30,8 +37,5 @@ public:
      */
     void max_pool();
 
-private:
-    std::string filename;
-    cv::Mat image; 
-    int M, N;
+
 };

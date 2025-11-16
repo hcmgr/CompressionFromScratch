@@ -1,14 +1,14 @@
 #include <vector>
 
-/**
- * Collection of run-length encoding/decoding algorithms
- */
+//
+// Collection of run-length encoding/decoding algs
+//
 namespace Rle {
 
-    /**
-     * Run-length encode given array
-     */
-    std::vector<int> rle_encode(std::vector<int> arr) {
+    //
+    // Run-length encode given byte array
+    //
+    std::vector<int> rleEncode(std::vector<int> arr) {
         std::vector<int> rle_array;
 
         int n = arr.size();

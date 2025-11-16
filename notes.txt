@@ -1,3 +1,11 @@
+TODO
+    - get demo working
+    - README steps
+    - make a #DEBUG macro
+    - clean up variable names and structure
+    - make jpeg.hpp and give it a nice interface
+    - remove experiments.hpp/cpp
+
 Steps:
     - (optional) separate into Y, Cb, Cr matrices
     - for each 8x8 block:

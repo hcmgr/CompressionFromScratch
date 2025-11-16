@@ -1,13 +1,11 @@
-#ifndef HUFFMAN_H
-#define HUFFMAN_H
-
+#pragma once
 #include <map>
 #include <queue>
 #include <opencv2/opencv.hpp>
 
-/**
- * Class to rep. a node in a huffman encoding tree
- */
+//
+// Huffman encoding tree node
+//
 class HuffmanNode {
 public:
     int val;
@@ -22,34 +20,30 @@ public:
     HuffmanNode(HuffmanNode *left, HuffmanNode *right);
 };
 
-/**
- * Class to perform huffman coding on a given byte array.
- */
-class Huffman {
+class HuffmanEncoder {
 private:
-    /* Huffman encoding tree */
+    // encoding tree
     HuffmanNode *root; 
 
-    /* Encodings map (i.e. mapping of the form: byte -> binary string) */
+    // encodings map, i.e. mapping of the form: byte -> binary string
     std::map<int, std::string> encodings;
 
-    /**
-     * Builds the huffman encoding tree
-     */
-    void build_huffman_tree(std::vector<int> data);
+    //
+    // Builds up encoding tree from given byte array. Expects `data` to be rle-encoding,
+    // see rle.hpp.
+    //
+    void buildEncodingTree(std::vector<int> data);
 
-    /**
-     * Traverses the huffman encoding tree to populate the encodings map
-     */
-    void build_encodings_map(HuffmanNode *root, std::string code);
+    //
+    // Traverses huffman encoding tree to populate the encodings map
+    //
+    void buildEncodingsMap(HuffmanNode *root, std::string code);
 
 public:
-    /**
-     * Huffman encodes the given byte array
-     */
-    std::vector<uchar> encode_data(std::vector<int> data, bool debug);
+    //
+    // Huffman encodes given byte array
+    //
+    std::vector<uchar> encode(std::vector<int> data, bool debug);
 
-    std::map<int, std::string> get_encodings();
+    std::map<int, std::string> getEncodings();
 };
-
-#endif // HUFFMAN_H
