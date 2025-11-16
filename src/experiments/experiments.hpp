@@ -11,7 +11,7 @@
 //      - remove % of pixels
 //      - avg pooling
 //      - max pooling
-// Mostly used to show how glorious JPEG is.
+// Mostly used to show how glorious JPEG is compared to the other methods.
 //
 class Experiments {
 private:
