@@ -246,7 +246,6 @@ int jpegForwardReverse(std::string imageFilePath, int quantMatrixIndex) {
     cv::Mat reconstructedImage;
     merge(invChannels, reconstructedImage);
     cv::Mat finalImage = ycbcrToBgr(reconstructedImage);
-    CvImageUtils::saveImage(finalImage, "../assets/example_after_qmi1.jpg");
     CvImageUtils::displayImage(finalImage, "After (" + imageFilePath + ")");
 
     // cleanup

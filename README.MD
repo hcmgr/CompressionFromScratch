@@ -19,11 +19,11 @@ This will render before and after images, like so:
 <br><br>
 **Before:**
 <br><br>
-![Before](assets/example_before.jpg)
+![Before](docs/example_before.jpg)
 <br><br>
 **After:**
 <br><br>
-![After](assets/example_after_qmi3.jpg)
+![After](docs/example_after_qmi3.jpg)
 <br><br>
 Now, we use a more aggressive quantisation, e.g. `--qmi=1`:
 ```bash
@@ -33,11 +33,11 @@ This yields a much more noticeable compression:
 <br><br>
 **Before:**
 <br><br>
-![Before](assets/example_before.jpg)
+![Before](docs/example_before.jpg)
 <br><br>
 **After:**
 <br><br>
-![After](assets/example_after_qmi1.jpg)
+![After](docs/example_after_qmi1.jpg)
 <br><br>
 
 ## Install
